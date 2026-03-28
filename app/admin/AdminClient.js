@@ -395,20 +395,35 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
   const [form, setForm] = useState({
     access_tier: "",
     difficulty_slug: "",
-    topic_slugs: [],
-    channel_slugs: [],
+    topic_slugs: [],   // 存 genre + duration
+    channel_slugs: [], // 存 show
     upload_time: "",
   });
   const [difficulties, setDifficulties] = useState(() => taxonomies.filter((t) => t.type === "difficulty").map((t) => t.slug));
-  const [topics, setTopics] = useState(() => taxonomies.filter((t) => t.type === "topic").map((t) => t.slug));
-  const [channels, setChannels] = useState(() => taxonomies.filter((t) => t.type === "channel").map((t) => t.slug));
+  const [genres, setGenres] = useState(() => taxonomies.filter((t) => t.type === "genre").map((t) => t.slug));
+  const [durations, setDurations] = useState(() => taxonomies.filter((t) => t.type === "duration").map((t) => t.slug));
+  const [shows, setShows] = useState(() => taxonomies.filter((t) => t.type === "show").map((t) => t.slug));
 
   const addLocalOption = (type, slug) => {
     if (type === "difficulty") setDifficulties(prev => prev.includes(slug) ? prev : [...prev, slug]);
-    else if (type === "topic") setTopics(prev => prev.includes(slug) ? prev : [...prev, slug]);
-    else if (type === "channel") setChannels(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "genre") setGenres(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "duration") setDurations(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "show") setShows(prev => prev.includes(slug) ? prev : [...prev, slug]);
   };
   function setF(key, val) { setForm((f) => ({ ...f, [key]: val })); }
+
+  // genre/duration 存在 topic_slugs 里，show 存在 channel_slugs 里
+  const selectedGenre = form.topic_slugs.find(s => genres.includes(s)) || "";
+  const selectedDuration = form.topic_slugs.find(s => durations.includes(s)) || "";
+
+  function setGenre(slug) {
+    const without = form.topic_slugs.filter(s => !genres.includes(s));
+    setF("topic_slugs", slug ? [...without, slug] : without);
+  }
+  function setDuration(slug) {
+    const without = form.topic_slugs.filter(s => !durations.includes(s));
+    setF("topic_slugs", slug ? [...without, slug] : without);
+  }
 
   function handleSave() {
     const payload = {};
@@ -452,21 +467,30 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
-      <TagSelector
-        label="话题标签（多选）"
-        value={form.topic_slugs}
-        onChange={(v) => setF("topic_slugs", v)}
-        options={topics}
-        type="topic"
+      <SingleTagSelector
+        label="内容类型（单选）"
+        value={selectedGenre}
+        onChange={setGenre}
+        options={genres.map(s => ({ slug: s }))}
+        type="genre"
+        onRefreshOptions={onRefreshTaxonomies}
+        onAddLocalOption={addLocalOption}
+      />
+      <SingleTagSelector
+        label="片段时长（单选）"
+        value={selectedDuration}
+        onChange={setDuration}
+        options={durations.map(s => ({ slug: s }))}
+        type="duration"
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
       <TagSelector
-        label="博主 / 频道（多选）"
+        label="剧名（多选）"
         value={form.channel_slugs}
         onChange={(v) => setF("channel_slugs", v)}
-        options={channels}
-        type="channel"
+        options={shows.map(s => ({ slug: s }))}
+        type="show"
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
@@ -490,29 +514,42 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
     duration_sec: initial.duration_sec || "",
     access_tier: initial.access_tier || "free",
     difficulty_slug: initial.difficulty_slug || "",
-    topic_slugs: initial.topic_slugs || [],
-    channel_slugs: initial.channel_slugs || [],
+    topic_slugs: initial.topic_slugs || [],   // 存 genre + duration
+    channel_slugs: initial.channel_slugs || [], // 存 show
     details_json: initial.details_json || "",
     youtube_url: initial.youtube_url || "",
     upload_time: initial.upload_time
       ? new Date(initial.upload_time).toISOString().slice(0, 10)
       : new Date().toISOString().slice(0, 10),
   });
-  const [jsonStatus, setJsonStatus] = useState(null); // null | "ok" | "error"
+  const [jsonStatus, setJsonStatus] = useState(null);
   const [difficulties, setDifficulties] = useState(() => taxonomies.filter((t) => t.type === "difficulty").map((t) => t.slug));
-  const [topics, setTopics] = useState(() => taxonomies.filter((t) => t.type === "topic").map((t) => t.slug));
-  const [channels, setChannels] = useState(() => taxonomies.filter((t) => t.type === "channel").map((t) => t.slug));
+  const [genres, setGenres] = useState(() => taxonomies.filter((t) => t.type === "genre").map((t) => t.slug));
+  const [durations, setDurations] = useState(() => taxonomies.filter((t) => t.type === "duration").map((t) => t.slug));
+  const [shows, setShows] = useState(() => taxonomies.filter((t) => t.type === "show").map((t) => t.slug));
 
-  const handleRefreshTaxonomies = async () => {
-    await onRefreshTaxonomies?.();
-  };
+  const handleRefreshTaxonomies = async () => { await onRefreshTaxonomies?.(); };
   const addLocalOption = (type, slug) => {
     if (type === "difficulty") setDifficulties(prev => prev.includes(slug) ? prev : [...prev, slug]);
-    else if (type === "topic") setTopics(prev => prev.includes(slug) ? prev : [...prev, slug]);
-    else if (type === "channel") setChannels(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "genre") setGenres(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "duration") setDurations(prev => prev.includes(slug) ? prev : [...prev, slug]);
+    else if (type === "show") setShows(prev => prev.includes(slug) ? prev : [...prev, slug]);
   };
 
   function setF(key, val) { setForm((f) => ({ ...f, [key]: val })); }
+
+  // genre/duration 存在 topic_slugs 里
+  const selectedGenre = form.topic_slugs.find(s => genres.includes(s)) || "";
+  const selectedDuration = form.topic_slugs.find(s => durations.includes(s)) || "";
+
+  function setGenre(slug) {
+    const without = form.topic_slugs.filter(s => !genres.includes(s));
+    setF("topic_slugs", slug ? [...without, slug] : without);
+  }
+  function setDuration(slug) {
+    const without = form.topic_slugs.filter(s => !durations.includes(s));
+    setF("topic_slugs", slug ? [...without, slug] : without);
+  }
 
   function validateJson(val) {
     if (!val.trim()) { setJsonStatus(null); return; }
@@ -536,7 +573,7 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
           <Input label="描述" value={form.description} onChange={(e) => setF("description", e.target.value)} placeholder="视频描述（可选）" />
         </div>
         <div style={{ gridColumn: "1/-1" }}>
-          <Input label="原 YouTube 链接" value={form.youtube_url} onChange={(e) => setF("youtube_url", e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+          <Input label="原视频链接" value={form.youtube_url} onChange={(e) => setF("youtube_url", e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
         </div>
       </div>
 
@@ -549,8 +586,33 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
         onRefreshOptions={handleRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
-      <TagSelector label="话题标签（多选）" value={form.topic_slugs} onChange={(v) => setF("topic_slugs", v)} options={topics} type="topic" onRefreshOptions={handleRefreshTaxonomies} onAddLocalOption={addLocalOption} />
-      <TagSelector label="博主 / 频道（多选）" value={form.channel_slugs} onChange={(v) => setF("channel_slugs", v)} options={channels} type="channel" onRefreshOptions={handleRefreshTaxonomies} onAddLocalOption={addLocalOption} />
+      <SingleTagSelector
+        label="内容类型（单选）"
+        value={selectedGenre}
+        onChange={setGenre}
+        options={genres.map(s => ({ slug: s }))}
+        type="genre"
+        onRefreshOptions={handleRefreshTaxonomies}
+        onAddLocalOption={addLocalOption}
+      />
+      <SingleTagSelector
+        label="片段时长（单选）"
+        value={selectedDuration}
+        onChange={setDuration}
+        options={durations.map(s => ({ slug: s }))}
+        type="duration"
+        onRefreshOptions={handleRefreshTaxonomies}
+        onAddLocalOption={addLocalOption}
+      />
+      <TagSelector
+        label="剧名（多选，可新增）"
+        value={form.channel_slugs}
+        onChange={(v) => setF("channel_slugs", v)}
+        options={shows.map(s => ({ slug: s }))}
+        type="show"
+        onRefreshOptions={handleRefreshTaxonomies}
+        onAddLocalOption={addLocalOption}
+      />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
