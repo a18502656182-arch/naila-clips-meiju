@@ -3,14 +3,18 @@
 import { useState } from "react";
 import FiltersClient from "./FiltersClient";
 import ClipsGridClient from "./ClipsGridClient";
+
 export default function HomeClient({ allItems, initialTaxonomies }) {
   const [filters, setFilters] = useState({
     sort: "newest",
     access: [],
     difficulty: [],
-    topic: [],
-    channel: [],
+    genre: [],
+    duration: [],
+    show: [],
+    showSearch: "",
   });
+
   return (
     <div>
       <FiltersClient filters={filters} onFiltersChange={setFilters} initialTaxonomies={initialTaxonomies} />
