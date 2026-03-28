@@ -1,0 +1,297 @@
+"use client";
+import { useEffect, useMemo, useState } from "react";
+import { THEME } from "../components/home/theme";
+import { remote, authFetch, formatDate, useIsMobile } from "./journalUtils";
+import { Card, SectionTitle } from "./JournalUI";
+import { OverviewPanel, TodayPlan, Heatmap, LearningAnalysis } from "./JournalPanels";
+import PosterGenerator from "./PosterGenerator";
+import { createSupabaseBrowserClient } from "../../utils/supabase/client";
+
+export default function Page({ accessToken }) {
+  const isMobile = useIsMobile(960);
+  const [loading, setLoading] = useState(true);
+  const [me, setMe] = useState(null);
+  const [journalData, setJournalData] = useState(null);
+  const [gameSummary, setGameSummary] = useState({
+    totalGameScore: 0,
+    playedGameCount: 0,
+  });
+
+  // 监听 Supabase token 刷新，及时同步到 localStorage
+  // 否则 token 1小时后过期，authFetch 还在用旧 token，导致误判未登录
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "TOKEN_REFRESHED" && session?.access_token) {
+        try { localStorage.setItem("sb_access_token", session.access_token); } catch {}
+      }
+      if (event === "SIGNED_OUT") {
+        try { localStorage.removeItem("sb_access_token"); } catch {}
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    authFetch(remote("/api/me"), { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setMe(d))
+      .catch(() => setMe({ logged_in: false }));
+  }, []);
+
+  useEffect(() => {
+    if (!me) return;
+    if (!me.logged_in) {
+      setLoading(false);
+      return;
+    }
+    loadJournalData();
+  }, [me]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("sb_access_token");
+    if (!token) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE || ""}/api/game_scores`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setGameSummary({
+          totalGameScore: data.totalGameScore || 0,
+          playedGameCount: data.playedGameCount || 0,
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  async function loadJournalData() {
+    setLoading(true);
+    try {
+      const [journalRes, vocabRes] = await Promise.all([
+        authFetch(remote("/api/journal_stats"), { cache: "no-store" }),
+        authFetch(remote("/api/vocab_favorites"), { cache: "no-store" }),
+      ]);
+      const journal = await journalRes.json();
+      const vocab = await vocabRes.json();
+      const items = vocab?.items || [];
+      setJournalData({ ...journal, vocabItems: items });
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  }
+
+  if (!loading && (!me || !me.logged_in || !me.is_member)) {
+    if (typeof window !== "undefined") window.location.replace("/redeem");
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: THEME.colors.bg }}>
+        <div style={{ height: 56, background: THEME.colors.surface, borderBottom: `1px solid ${THEME.colors.border}` }} />
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "22px 16px 60px",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: 10,
+          }}
+        >
+          {[220, 260, 320, 260, 220, 220].map((h, i) => (
+            <div
+              key={i}
+              style={{
+                height: h,
+                borderRadius: 24,
+                border: `1px solid ${THEME.colors.border}`,
+                background: "linear-gradient(90deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.92) 30%, rgba(255,255,255,0.65) 60%)",
+                backgroundSize: "200% 100%",
+                animation: "shine 1.3s ease-in-out infinite",
+              }}
+            />
+          ))}
+        </div>
+        <style>{`@keyframes shine { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+      </div>
+    );
+  }
+
+  const d = journalData || {};
+  const vocabItems = d.vocabItems || [];
+  const activeDays = Object.keys(d.heatmap || {}).length;
+
+  const topicLabelMap = {
+    "daily-life": "日常生活",
+    "self-improvement": "个人成长",
+    "food": "美食探店",
+    "travel": "旅行",
+    "business": "职场商务",
+    "culture": "文化",
+    "opinion": "观点表达",
+    "skills": "方法技能",
+  };
+
+  const topicMap = {};
+  (d.bookmarked_topics || []).forEach((slug) => {
+    const label = topicLabelMap[slug] || slug;
+    topicMap[label] = (topicMap[label] || 0) + 1;
+  });
+  const topicStats = Object.entries(topicMap)
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
+  const tasks = [
+    { label: "今天看 1 个场景视频", done: (d.today_views || 0) >= 1 },
+    { label: "今天收藏 3 个词/表达", done: (d.today_vocab || 0) >= 3 },
+  ];
+
+  const desktopHeroGrid = isMobile ? "1fr" : "1.08fr 0.92fr";
+  const desktopMiddleGrid = isMobile ? "1fr" : "1.08fr 0.92fr";
+  const desktopBottomGrid = isMobile ? "1fr" : "1.1fr 0.9fr";
+
+  return (
+    <div style={{ minHeight: "100vh", background: THEME.colors.bg }}>
+      <style>{`
+        @keyframes floatIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          background: "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.82))",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderBottom: "1px solid rgba(15,23,42,0.08)",
+          height: 56,
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px", height: "100%", display: "flex", alignItems: "center", gap: 4 }}>
+          <a
+            href="/"
+            style={{
+              display: "flex", alignItems: "center",
+              textDecoration: "none", color: THEME.colors.ink,
+              fontWeight: 300, fontSize: 28, lineHeight: 1,
+              flexShrink: 0, padding: "4px 6px 4px 0",
+            }}
+          >‹</a>
+          <span style={{ fontSize: 15, fontWeight: 1000, color: THEME.colors.ink, whiteSpace: "nowrap" }}>我的英语手帐</span>
+          <span style={{ fontSize: 11, color: THEME.colors.faint, fontWeight: 800, whiteSpace: "nowrap", marginLeft: 8 }}>📅 {formatDate()}</span>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "18px 16px 60px" }}>
+        <div
+          style={{
+            borderRadius: 28,
+            padding: isMobile ? "18px 16px" : "22px 22px",
+            color: "#fff",
+            background:
+              "radial-gradient(circle at 10% 10%, rgba(236,72,153,0.55), transparent 45%), radial-gradient(circle at 90% 20%, rgba(99,102,241,0.65), transparent 40%), radial-gradient(circle at 40% 120%, rgba(14,165,233,0.55), transparent 50%), linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(79,70,229,0.95) 40%, rgba(236,72,153,0.85) 100%)",
+            boxShadow: "0 24px 70px rgba(2,6,23,0.18)",
+            position: "relative",
+            overflow: "hidden",
+            animation: "floatIn 420ms ease",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: isMobile ? "flex-start" : "center",
+              flexDirection: "column", alignItems: "center",
+              flexDirection: isMobile ? "column" : "row",
+              gap: 10,
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 1000 }}>
+                👋 {me?.email?.split("@")[0] || "同学"}，今天也来打个卡
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.92, lineHeight: 1.8, marginTop: 8 }}>
+                记录你每天看了什么、收藏了什么，慢慢来，积累才是最重要的事。
+              </div>
+            </div>
+            {isMobile ? (
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <div style={{ fontSize: 11, opacity: 0.86, fontWeight: 900 }}>当前状态</div>
+                <div style={{ fontSize: 28, fontWeight: 1000, marginTop: 4 }}>{d.streak_days || 0} 天</div>
+                <div style={{ fontSize: 12, opacity: 0.88, marginTop: 4 }}>连续学习中</div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  minWidth: 180,
+                  padding: "14px 14px",
+                  borderRadius: 20,
+                  background: "rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: 11, opacity: 0.86, fontWeight: 900 }}>当前状态</div>
+                <div style={{ fontSize: 28, fontWeight: 1000, marginTop: 4 }}>{d.streak_days || 0} 天</div>
+                <div style={{ fontSize: 12, opacity: 0.88, marginTop: 4 }}>连续学习中</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: desktopHeroGrid, gap: 10, marginTop: 14, alignItems: "start" }}>
+          <OverviewPanel
+            streakDays={d.streak_days || 0}
+            totalViews={d.total_views || 0}
+            activeDays={activeDays}
+            vocabCount={vocabItems.length}
+            isMobile={isMobile}
+          />
+          <TodayPlan d={d} isMobile={isMobile} />
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: desktopMiddleGrid, gap: 10, marginTop: 14, alignItems: "start" }}>
+          <Heatmap
+            heatmapData={d.heatmap || {}}
+            streakDays={d.streak_days || 0}
+            totalViews={d.total_views || 0}
+            isMobile={isMobile}
+          />
+          <LearningAnalysis
+            d={d}
+            vocabCount={vocabItems.length}
+            topicStats={topicStats}
+            gameSummary={gameSummary}
+            isMobile={isMobile}
+          />
+        </div>
+
+        {/* 海报生成器：全宽独占一行，内部横向布局 */}
+        <div style={{ marginTop: 10 }}>
+          <Card style={{ padding: 18 }}>
+            <SectionTitle
+              emoji="📸"
+              title="海报生成器"
+              sub="把学习数据合成一张高颜值打卡海报，适合朋友圈 / 小红书分享"
+            />
+            <PosterGenerator
+              me={me}
+              streakDays={d.streak_days || 0}
+              totalVideos={d.total_views || 0}
+              vocabCount={vocabItems.length}
+              masteredCount={0}
+              heatmapData={d.heatmap || {}}
+              tasks={tasks}
+              activeDays={activeDays}
+              topTopic={topicStats[0]?.label || "继续学习后会出现"}
+              isMobile={isMobile}
+            />
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
