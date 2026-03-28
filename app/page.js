@@ -33,47 +33,50 @@ function normRow(r) {
     cover_url: r.cover_url ?? null,
     video_url: r.video_url ?? null,
     difficulty: typeof r.difficulty_slug === "string" ? r.difficulty_slug : null,
+    // topic_slugs 存 genre + duration 标签
     topics: Array.isArray(r.topic_slugs) ? r.topic_slugs : [],
+    // channel_slugs 存剧名 show 标签
     channels: Array.isArray(r.channel_slugs) ? r.channel_slugs : [],
   };
 }
 
 async function fetchAllClips() {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("clips_view")
-      .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
-      .order("upload_time", { ascending: false })
-    if (error) throw error;
-    return (data || []).map(normRow);
-  }
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("clips_view")
+    .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
+    .order("upload_time", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(normRow);
+}
 
 async function fetchTaxonomies() {
-    const supabase = getSupabaseAdmin();
-    const { data: taxRows, error } = await supabase
-      .from("taxonomies")
-      .select("type, slug")
-      .order("type", { ascending: true })
-      .order("slug", { ascending: true });
-    if (error) return { difficulties: [], topics: [], channels: [] };
-    const rows = taxRows || [];
-    return {
-      difficulties: rows.filter((t) => t.type === "difficulty").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-      topics: rows.filter((t) => t.type === "topic").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-      channels: rows.filter((t) => t.type === "channel").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-    };
-  }
+  const supabase = getSupabaseAdmin();
+  const { data: taxRows, error } = await supabase
+    .from("taxonomies")
+    .select("type, slug")
+    .order("type", { ascending: true })
+    .order("slug", { ascending: true });
+  if (error) return { difficulties: [], genres: [], durations: [], shows: [] };
+  const rows = taxRows || [];
+  return {
+    difficulties: rows.filter((t) => t.type === "difficulty").map((t) => ({ slug: t.slug })),
+    genres: rows.filter((t) => t.type === "genre").map((t) => ({ slug: t.slug })),
+    durations: rows.filter((t) => t.type === "duration").map((t) => ({ slug: t.slug })),
+    shows: rows.filter((t) => t.type === "show").map((t) => ({ slug: t.slug })),
+  };
+}
 
 async function fetchFeatured() {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase
-      .from("clips_view")
-      .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
-      .eq("access_tier", "free")
-      .order("upload_time", { ascending: false })
-    if (Array.isArray(data) && data[0]) return normRow(data[0]);
-    return null;
-  }
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("clips_view")
+    .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
+    .eq("access_tier", "free")
+    .order("upload_time", { ascending: false });
+  if (Array.isArray(data) && data[0]) return normRow(data[0]);
+  return null;
+}
 
 export default async function Page() {
   let allItems = [];
@@ -93,7 +96,7 @@ export default async function Page() {
   } catch {}
   if (!featured) featured = allItems[0] || null;
 
-  let taxonomies = { difficulties: [], topics: [], channels: [] };
+  let taxonomies = { difficulties: [], genres: [], durations: [], shows: [] };
   try {
     taxonomies = await fetchTaxonomies();
   } catch {}
@@ -156,7 +159,7 @@ export default async function Page() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                油管英语场景库
+                美剧英语场景库
               </div>
               <div
                 style={{
