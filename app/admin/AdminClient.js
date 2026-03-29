@@ -434,6 +434,13 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
     if (form.topic_slugs.length > 0) payload.topic_slugs = form.topic_slugs;
     if (form.channel_slugs.length > 0) payload.channel_slugs = form.channel_slugs;
     if (form.upload_time) payload.upload_time = form.upload_time;
+    // 传 slug→type 映射，让后端知道每个 slug 的真实 type
+    const taxonomyHints = {};
+    genres.forEach(s => { taxonomyHints[s] = "genre"; });
+    durations.forEach(s => { taxonomyHints[s] = "duration"; });
+    shows.forEach(s => { taxonomyHints[s] = "show"; });
+    difficulties.forEach(s => { taxonomyHints[s] = "difficulty"; });
+    payload.taxonomy_hints = taxonomyHints;
     onSave(payload);
   }
 
@@ -644,7 +651,15 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
         <Btn variant="ghost" onClick={onCancel}>取消</Btn>
         <Btn
-          onClick={() => onSave(form)}
+          onClick={() => {
+            // 构建 slug→type 提示，让后端知道每个 slug 的真实 type
+            const taxonomyHints = {};
+            genres.forEach(s => { taxonomyHints[s] = "genre"; });
+            durations.forEach(s => { taxonomyHints[s] = "duration"; });
+            shows.forEach(s => { taxonomyHints[s] = "show"; });
+            difficulties.forEach(s => { taxonomyHints[s] = "difficulty"; });
+            onSave({ ...form, taxonomy_hints: taxonomyHints });
+          }}
           disabled={loading || (!isBatch && (!form.title || !form.video_url)) || jsonStatus === "error"}
         >{loading ? (isBatch ? "批量保存中…" : "保存中…") : (isBatch ? "💾 批量保存" : "💾 保存视频")}</Btn>
       </div>
