@@ -80,8 +80,8 @@ export async function GET(req) {
     }
 
     const difficulties = (taxRows || []).filter((t) => t.type === "difficulty");
-    const topics = (taxRows || []).filter((t) => t.type === "topic");
-    const channels = (taxRows || []).filter((t) => t.type === "channel");
+    const topics = (taxRows || []).filter((t) => t.type === "topic" || t.type === "genre" || t.type === "duration");
+    const channels = (taxRows || []).filter((t) => t.type === "channel" || t.type === "show");
 
     // 2) 轻量拉 clips_view 用于 counts（只取必要列）
     let q = supabase
