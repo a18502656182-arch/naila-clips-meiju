@@ -192,8 +192,8 @@ export async function POST(req) {
         .eq("clip_id", id);
 
       const currentDifficulty = currentTaxRows?.find(r => r.taxonomies?.type === "difficulty")?.taxonomies?.slug || null;
-      const currentTopics = currentTaxRows?.filter(r => r.taxonomies?.type === "topic").map(r => r.taxonomies.slug) || [];
-      const currentChannels = currentTaxRows?.filter(r => r.taxonomies?.type === "channel").map(r => r.taxonomies.slug) || [];
+      const currentTopics = currentTaxRows?.filter(r => ["topic","genre","duration"].includes(r.taxonomies?.type)).map(r => r.taxonomies.slug) || [];
+      const currentChannels = currentTaxRows?.filter(r => ["channel","show"].includes(r.taxonomies?.type)).map(r => r.taxonomies.slug) || [];
 
       const finalDifficulty = hasDifficulty ? difficulty_slug : currentDifficulty;
       const finalTopics = hasTopics ? topic_slugs : currentTopics;
