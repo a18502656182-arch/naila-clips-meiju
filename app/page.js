@@ -61,9 +61,9 @@ async function fetchTaxonomies() {
   const rows = taxRows || [];
   return {
     difficulties: rows.filter((t) => t.type === "difficulty").map((t) => ({ slug: t.slug })),
-    genres: rows.filter((t) => t.type === "genre").map((t) => ({ slug: t.slug })),
+    genres: rows.filter((t) => t.type === "genre" || t.type === "topic").map((t) => ({ slug: t.slug })),
     durations: rows.filter((t) => t.type === "duration").map((t) => ({ slug: t.slug })),
-    shows: rows.filter((t) => t.type === "show").map((t) => ({ slug: t.slug })),
+    shows: rows.filter((t) => t.type === "show" || t.type === "channel").map((t) => ({ slug: t.slug })),
   };
 }
 
