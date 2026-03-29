@@ -9,8 +9,8 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     sort: "newest",
     access: [],
     difficulty: [],
-    genre: [],
-    duration: [],
+    genre: "",
+    duration: "",
     show: [],
     showSearch: "",
   });
