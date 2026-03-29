@@ -33,7 +33,6 @@ async function getToken() {
     if (data?.session?.access_token) return data.session.access_token;
   } catch {}
   if (_adminToken) return _adminToken;
-  // 从 cookie 直接读（fallback）
   try {
     const match = document.cookie.split(";").map(c => c.trim()).find(c => c.includes("-auth-token="));
     if (!match) return "";
@@ -71,12 +70,10 @@ function fmtFull(dt) {
 function isMemberActive(sub) {
   if (!sub) return false;
   if (sub.status !== "active") return false;
-  // expires_at 为 null 表示永久卡，永远有效
   if (!sub.expires_at) return true;
   return new Date(sub.expires_at) > new Date();
 }
 function planLabel(days) {
-  // days=0 或 null/undefined 均表示永久卡
   if (days === 0 || days === null || days === undefined) return "永久卡";
   if (days >= 365) return "年卡";
   if (days >= 90) return "季卡";
@@ -255,11 +252,13 @@ function TagPill({ slug, selected, accent, onSelect, onRename, onDelete }) {
 }
 
 // ── 标签选择器（多选 + 可新增 + 可编辑/删除）────────────────────
+// options 必须是字符串数组 string[]
 function TagSelector({ label, value = [], onChange, options = [], type, onRefreshOptions, onAddLocalOption }) {
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
   const toggle = (slug) => onChange(value.includes(slug) ? value.filter((v) => v !== slug) : [...value, slug]);
-  const [localOptions, setLocalOptions] = useState(options);
+  // 确保 localOptions 始终是字符串数组
+  const [localOptions, setLocalOptions] = useState(() => options.map(o => typeof o === "string" ? o : o.slug));
 
   const addNew = () => {
     const s = newVal.trim().toLowerCase().replace(/\s+/g, "-");
@@ -324,10 +323,12 @@ function TagSelector({ label, value = [], onChange, options = [], type, onRefres
 }
 
 // ── 单选标签（难度）────────────────────────────────────
+// options 必须是字符串数组 string[]
 function SingleTagSelector({ label, value, onChange, options = [], type, onRefreshOptions, onAddLocalOption }) {
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
-  const [localOptions, setLocalOptions] = useState(options);
+  // 确保 localOptions 始终是字符串数组
+  const [localOptions, setLocalOptions] = useState(() => options.map(o => typeof o === "string" ? o : o.slug));
 
   const addNew = () => {
     const s = newVal.trim().toLowerCase().replace(/\s+/g, "-");
@@ -390,15 +391,17 @@ function SingleTagSelector({ label, value, onChange, options = [], type, onRefre
     </div>
   );
 }
+
 // ── 视频表单（新增/编辑共用）──────────────────────────
 function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies }) {
   const [form, setForm] = useState({
     access_tier: "",
     difficulty_slug: "",
-    topic_slugs: [],   // 存 genre + duration
-    channel_slugs: [], // 存 show
+    topic_slugs: [],
+    channel_slugs: [],
     upload_time: "",
   });
+  // ✅ 直接用字符串数组，不再 map 成对象
   const [difficulties, setDifficulties] = useState(() => taxonomies.filter((t) => t.type === "difficulty").map((t) => t.slug));
   const [genres, setGenres] = useState(() => taxonomies.filter((t) => t.type === "genre").map((t) => t.slug));
   const [durations, setDurations] = useState(() => taxonomies.filter((t) => t.type === "duration").map((t) => t.slug));
@@ -412,7 +415,6 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
   };
   function setF(key, val) { setForm((f) => ({ ...f, [key]: val })); }
 
-  // genre/duration 存在 topic_slugs 里，show 存在 channel_slugs 里
   const selectedGenre = form.topic_slugs.find(s => genres.includes(s)) || "";
   const selectedDuration = form.topic_slugs.find(s => durations.includes(s)) || "";
 
@@ -467,11 +469,12 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
+      {/* ✅ 修复：直接传字符串数组，不再 map 成 { slug } 对象 */}
       <SingleTagSelector
         label="内容类型（单选）"
         value={selectedGenre}
         onChange={setGenre}
-        options={genres.map(s => ({ slug: s }))}
+        options={genres}
         type="genre"
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -480,7 +483,7 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
         label="片段时长（单选）"
         value={selectedDuration}
         onChange={setDuration}
-        options={durations.map(s => ({ slug: s }))}
+        options={durations}
         type="duration"
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -489,7 +492,7 @@ function BatchForm({ taxonomies, onSave, onCancel, loading, onRefreshTaxonomies 
         label="剧名（多选）"
         value={form.channel_slugs}
         onChange={(v) => setF("channel_slugs", v)}
-        options={shows.map(s => ({ slug: s }))}
+        options={shows}
         type="show"
         onRefreshOptions={onRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -514,8 +517,8 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
     duration_sec: initial.duration_sec || "",
     access_tier: initial.access_tier || "free",
     difficulty_slug: initial.difficulty_slug || "",
-    topic_slugs: initial.topic_slugs || [],   // 存 genre + duration
-    channel_slugs: initial.channel_slugs || [], // 存 show
+    topic_slugs: initial.topic_slugs || [],
+    channel_slugs: initial.channel_slugs || [],
     details_json: initial.details_json || "",
     youtube_url: initial.youtube_url || "",
     upload_time: initial.upload_time
@@ -523,6 +526,7 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
       : new Date().toISOString().slice(0, 10),
   });
   const [jsonStatus, setJsonStatus] = useState(null);
+  // ✅ 直接用字符串数组
   const [difficulties, setDifficulties] = useState(() => taxonomies.filter((t) => t.type === "difficulty").map((t) => t.slug));
   const [genres, setGenres] = useState(() => taxonomies.filter((t) => t.type === "genre").map((t) => t.slug));
   const [durations, setDurations] = useState(() => taxonomies.filter((t) => t.type === "duration").map((t) => t.slug));
@@ -538,7 +542,6 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
 
   function setF(key, val) { setForm((f) => ({ ...f, [key]: val })); }
 
-  // genre/duration 存在 topic_slugs 里
   const selectedGenre = form.topic_slugs.find(s => genres.includes(s)) || "";
   const selectedDuration = form.topic_slugs.find(s => durations.includes(s)) || "";
 
@@ -586,11 +589,12 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
         onRefreshOptions={handleRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
       />
+      {/* ✅ 修复：直接传字符串数组，不再 map 成 { slug } 对象 */}
       <SingleTagSelector
         label="内容类型（单选）"
         value={selectedGenre}
         onChange={setGenre}
-        options={genres.map(s => ({ slug: s }))}
+        options={genres}
         type="genre"
         onRefreshOptions={handleRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -599,7 +603,7 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
         label="片段时长（单选）"
         value={selectedDuration}
         onChange={setDuration}
-        options={durations.map(s => ({ slug: s }))}
+        options={durations}
         type="duration"
         onRefreshOptions={handleRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -608,7 +612,7 @@ function ClipForm({ initial = {}, taxonomies, onSave, onCancel, loading, onRefre
         label="剧名（多选，可新增）"
         value={form.channel_slugs}
         onChange={(v) => setF("channel_slugs", v)}
-        options={shows.map(s => ({ slug: s }))}
+        options={shows}
         type="show"
         onRefreshOptions={handleRefreshTaxonomies}
         onAddLocalOption={addLocalOption}
@@ -1065,7 +1069,6 @@ function CodesPanel({ initialCodes, onToast }) {
         <Btn onClick={() => setShowGen(true)}>+ 批量生成</Btn>
       </div>
 
-      {/* 状态筛选 */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {[["all","全部"], ["active","可用"], ["used","已用完"], ["inactive","已停用"]].map(([v,l]) => (
           <button key={v} onClick={() => setFilter(v)} style={{
@@ -1077,7 +1080,6 @@ function CodesPanel({ initialCodes, onToast }) {
         ))}
       </div>
 
-      {/* 卡种筛选 + 搜索 + 一键复制 */}
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {[["all","全部卡种"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
           <button key={v} onClick={() => setPlanFilter(v)} style={{
@@ -1113,9 +1115,7 @@ function CodesPanel({ initialCodes, onToast }) {
               <code style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 800, color: T.ink, flex: 1 }}>
                 {c.code}
               </code>
-              <Chip color={chipColor}>
-                {planLabel(c.days)}
-              </Chip>
+              <Chip color={chipColor}>{planLabel(c.days)}</Chip>
               {used
                 ? <Chip color={T.muted}>已用完</Chip>
                 : c.is_active
@@ -1302,7 +1302,6 @@ function UsersPanel({ initialUsers, onToast }) {
                   {!u.subscription && <Chip color={T.muted}>普通用户</Chip>}
                   {u.subscription && (
                     <span style={{ fontSize: 11, color: T.faint }}>
-                      {/* expires_at 为 null 表示永久卡 */}
                       到期：{u.subscription.expires_at ? fmt(u.subscription.expires_at) : "永久"}
                     </span>
                   )}
@@ -1329,7 +1328,6 @@ function UsersPanel({ initialUsers, onToast }) {
               <div style={{ fontSize: 13, fontWeight: 800, color: T.ink }}>{memberModal.username || memberModal.email}</div>
               {memberModal.subscription && (
                 <div style={{ fontSize: 12, color: T.muted, marginTop: 4 }}>
-                  {/* expires_at 为 null 表示永久卡 */}
                   当前到期：{memberModal.subscription.expires_at ? fmt(memberModal.subscription.expires_at) : "永久"}
                   {isMemberActive(memberModal.subscription) ? " (有效)" : " (已过期)"}
                 </div>
