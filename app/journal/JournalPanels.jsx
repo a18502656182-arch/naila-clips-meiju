@@ -21,7 +21,7 @@ function OverviewPanel({ streakDays, totalViews, activeDays, vocabCount, isMobil
         <MiniStat
           label="累计视频"
           value={totalViews || 0}
-          hint="个真实场景"
+          hint="个影视片段"
           accent={{
             bg: "linear-gradient(135deg, rgba(99,102,241,0.16), rgba(99,102,241,0.05))",
             border: "rgba(99,102,241,0.22)",
@@ -153,9 +153,9 @@ function TaskRow({ title, desc, done, buttonText, href, neutral, isMobile }) {
 function TodayPlan({ d, isMobile }) {
   const autoTasks = [
     {
-      title: "今天看 1 个场景视频",
+      title: "今天看 1 个影视片段",
       done: (d.today_views || 0) >= 1,
-      desc: (d.today_views || 0) >= 1 ? `今天已看 ${d.today_views || 0} 个视频` : "先看一个短片，让英语进入状态",
+      desc: (d.today_views || 0) >= 1 ? `今天已看 ${d.today_views || 0} 个视频` : "先看一个剧集片段，让英语进入状态",
       href: "/",
       buttonText: "去看视频",
     },
@@ -849,7 +849,7 @@ function ContinueLearning({ isMobile }) {
     <Card style={{ padding: 18 }}>
       <SectionTitle emoji="🚀" title="继续学习" sub="翻完记录，继续出发" />
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12 }}>
-        <ActionCard emoji="🎬" title="去看新视频" desc="继续从场景里输入真实表达，让学习进入状态。" href="/" dark />
+        <ActionCard emoji="🎬" title="去看新视频" desc="继续从英美剧片段里输入真实表达，让学习进入状态。" href="/" dark />
         <ActionCard emoji="📚" title="去复习词汇本" desc="看看最近收藏了什么，顺手再整理一下自己的表达库。" href="/bookmarks" />
         <ActionCard emoji="🎮" title="去游戏大厅" desc="把输入转成输出练习，让今天的内容更容易留下来。" href="/practice" />
       </div>
