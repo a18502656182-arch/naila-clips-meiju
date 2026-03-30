@@ -226,7 +226,7 @@ async function fetchAll() {
     if (allVideos.length === 0) {
       setStatus('没有找到任何视频，请检查 Token 或关键词过滤', 'err');
     } else {
-      allVideos.sort((a, b) => a.filename.localeCompare(b.filename));
+
       showResult();
     }
   } catch (e) {
