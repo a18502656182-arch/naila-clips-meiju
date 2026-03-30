@@ -120,7 +120,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
     // 顶部
     ctx.font = `800 24px ${FONT_FAMILY}`;
     ctx.fillStyle = T.textFaint;
-    ctx.fillText("ENGLISH IMMERSION", PAD, currentY);
+    ctx.fillText("DRAMA · BILINGUAL · VOCAB", PAD, currentY);
     const now = new Date();
     const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
     ctx.textAlign = "right";
@@ -140,9 +140,9 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
 
     // 视觉锤
     currentY += 90;
-    let badgeText = "场景探索者";
-    if (streakDays >= 21) badgeText = "语境重塑大师";
-    else if (streakDays >= 7) badgeText = "深度沉浸者";
+    let badgeText = "剧场英语探索者";
+    if (streakDays >= 21) badgeText = "影视英语沉浸大师";
+    else if (streakDays >= 7) badgeText = "深度沉浸学习者";
     else if (vocabCount >= 30) badgeText = "语料收集达人";
 
     ctx.font = `800 24px ${FONT_FAMILY}`;
@@ -182,7 +182,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
     const cardH = 220;
     drawGlassCard(ctx, PAD, currentY, W - PAD * 2, cardH, 40, T.glassBg, T.glassBorder, T.glassShadow);
     const statCols = [
-      { label: "真实场景输入", val: totalVideos || 0 },
+      { label: "影视片段学习", val: totalVideos || 0 },
       { label: "累计沉淀语料", val: vocabCount || 0 },
       { label: "总计活跃天数", val: activeDays || 0 },
     ];
@@ -283,7 +283,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
     ctx.textAlign = "center";
     ctx.font = `900 32px ${FONT_FAMILY}`;
     ctx.fillStyle = T.textMain;
-    ctx.fillText("nailaobao.top", W / 2, H - 110);
+    ctx.fillText("剧场英语 · Drama English", W / 2, H - 110);
     ctx.font = `600 22px ${FONT_FAMILY}`;
     ctx.fillStyle = T.textFaint;
     ctx.fillText("语境输入 · 词汇沉淀 · 习惯养成", W / 2, H - 65);
@@ -463,7 +463,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
             {!isMobile && (
               <a
                 href={posterBlobUrl}
-                download={`语境重塑记录_${new Date().toISOString().slice(0, 10)}.png`}
+                download={`剧场英语打卡_${new Date().toISOString().slice(0, 10)}.png`}
                 style={{
                   display: "block",
                   width: "100%",
