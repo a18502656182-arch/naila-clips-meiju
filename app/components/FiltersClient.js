@@ -170,23 +170,29 @@ function ShowDrawer({ shows, sources, onClose }) {
           </div>
         </div>
 
-        {/* 剧集标签列表 */}
-        <div className="drawerBody" style={{ flex: 1, overflowY: "auto", padding: "16px 20px 24px" }}>
+        {/* 剧集列表目录 */}
+        <div className="drawerBody" style={{ flex: 1, overflowY: "auto", padding: "8px 0 24px" }}>
           {displayShows.length === 0 ? (
             <div style={{ textAlign: "center", padding: 40, color: THEME.colors.faint, fontSize: 13 }}>
               暂无剧集
             </div>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {displayShows.map((s) => (
-                <span key={s.slug} style={{
-                  display: "inline-block", padding: "6px 14px", borderRadius: 999,
-                  fontSize: 13, background: "#f4f6fb",
-                  border: `1px solid ${THEME.colors.border2}`,
-                  color: THEME.colors.ink, fontWeight: 500,
+            <div>
+              {displayShows.map((s, i) => (
+                <div key={s.slug} style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "11px 20px",
+                  borderBottom: `1px solid ${THEME.colors.border}`,
+                  background: i % 2 === 0 ? "#fff" : "#fafbfd",
                 }}>
-                  {s.slug}
-                </span>
+                  <span style={{
+                    minWidth: 22, fontSize: 12, fontWeight: 700,
+                    color: THEME.colors.faint, textAlign: "right",
+                  }}>{i + 1}</span>
+                  <span style={{ fontSize: 14, color: THEME.colors.ink, fontWeight: 500 }}>
+                    {s.slug}
+                  </span>
+                </div>
               ))}
             </div>
           )}
@@ -197,7 +203,19 @@ function ShowDrawer({ shows, sources, onClose }) {
 }
 
 // ── 剧名行：热门标签 + 全目录按钮 ────────────────────────
-const HOT_COUNT = 5;
+const HOT_COUNT = 10;
+
+// 云标签循环配色（未选中状态）
+const TAG_COLORS = [
+  { bg: "rgba(99,102,241,0.10)", color: "#4338ca", border: "rgba(99,102,241,0.25)" },
+  { bg: "rgba(16,185,129,0.10)", color: "#065f46", border: "rgba(16,185,129,0.25)" },
+  { bg: "rgba(245,158,11,0.10)", color: "#92400e", border: "rgba(245,158,11,0.25)" },
+  { bg: "rgba(239,68,68,0.10)",  color: "#991b1b", border: "rgba(239,68,68,0.25)"  },
+  { bg: "rgba(6,182,212,0.10)",  color: "#0e7490", border: "rgba(6,182,212,0.25)"  },
+  { bg: "rgba(139,92,246,0.10)", color: "#5b21b6", border: "rgba(139,92,246,0.25)" },
+  { bg: "rgba(236,72,153,0.10)", color: "#9d174d", border: "rgba(236,72,153,0.25)" },
+  { bg: "rgba(52,211,153,0.10)", color: "#065f46", border: "rgba(52,211,153,0.25)" },
+];
 
 function ShowFilter({ shows, sources, selectedShows, showSearch, onToggleShow, onSearchChange, onClearShows }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -241,19 +259,21 @@ function ShowFilter({ shows, sources, selectedShows, showSearch, onToggleShow, o
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        {displayShows.map((s) => {
+        {displayShows.map((s, i) => {
           const isSelected = selectedShows.includes(s.slug);
+          const palette = TAG_COLORS[i % TAG_COLORS.length];
           return (
             <span
               key={s.slug}
               onClick={() => onToggleShow(s.slug)}
               style={{
-                padding: "5px 12px", borderRadius: 999, fontSize: 12, cursor: "pointer",
+                padding: "5px 13px", borderRadius: 999, fontSize: 12, cursor: "pointer",
                 userSelect: "none", transition: "all 0.15s", whiteSpace: "nowrap",
-                border: `1px solid ${isSelected ? THEME.colors.accent : THEME.colors.border2}`,
-                background: isSelected ? "rgba(79,70,229,0.10)" : THEME.colors.surface,
-                color: isSelected ? THEME.colors.accent : THEME.colors.ink,
-                fontWeight: isSelected ? 700 : 400,
+                fontWeight: 700,
+                border: `1px solid ${isSelected ? THEME.colors.accent : palette.border}`,
+                background: isSelected ? "rgba(79,70,229,0.15)" : palette.bg,
+                color: isSelected ? THEME.colors.accent : palette.color,
+                boxShadow: isSelected ? "0 0 0 2px rgba(99,102,241,0.18)" : "none",
               }}
             >{s.slug}</span>
           );
