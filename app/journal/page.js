@@ -145,7 +145,7 @@ export default function Page({ accessToken }) {
     .slice(0, 6);
 
   const tasks = [
-    { label: "今天看 1 个场景视频", done: (d.today_views || 0) >= 1 },
+    { label: "今天看 1 个影视片段", done: (d.today_views || 0) >= 1 },
     { label: "今天收藏 3 个词/表达", done: (d.today_vocab || 0) >= 3 },
   ];
 
