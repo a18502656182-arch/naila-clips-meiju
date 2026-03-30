@@ -280,23 +280,23 @@ export default function HeroSection({ featured }) {
         <div className="heroGrid">
           <div className="heroLeft">
             <div className="heroEyebrow">
-              ✦ IMMERSIVE SCENE LIBRARY
+              ✦ DRAMA SCENE LIBRARY
             </div>
 
             <h1 className="heroTitle">
-              沉浸式真实语境，
+              沉浸英美剧原声，
               <br />
               重塑你的英语本能
             </h1>
 
             <div className="heroDesc">
-              摒弃死记硬背。从全网精选的超清实境短片中提取高频语料，配合交互式双语字幕与动态卡片，让每一次观看都转化为真正的肌肉记忆。
+              摒弃死记硬背。从精选英美剧、电影、动画片段中提取高频语料，配合交互式双语字幕与动态词汇卡，让每一次观看都转化为真正的语言直觉。
             </div>
 
             <div className="heroFeatures">
-              <FeatureItem>实境短片流</FeatureItem>
+              <FeatureItem>影视原声片段</FeatureItem>
               <FeatureItem>动态双语字幕</FeatureItem>
-              <FeatureItem>高频语料库</FeatureItem>
+              <FeatureItem>高频词汇卡片</FeatureItem>
             </div>
 
             <div className="heroActions">
@@ -312,7 +312,7 @@ export default function HeroSection({ featured }) {
               </a>
             </div>
 
-            <div className="heroNote">系统化积累口语表达，拒绝碎片化焦虑。</div>
+            <div className="heroNote">用真实影视语料，练出地道英语直觉。</div>
           </div>
 
           <div className="heroRight">
