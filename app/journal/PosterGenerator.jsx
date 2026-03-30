@@ -140,7 +140,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
 
     // 视觉锤
     currentY += 90;
-    let badgeText = "剧场英语探索者";
+    let badgeText = "影视英语场景库探索者";
     if (streakDays >= 21) badgeText = "影视英语沉浸大师";
     else if (streakDays >= 7) badgeText = "深度沉浸学习者";
     else if (vocabCount >= 30) badgeText = "语料收集达人";
@@ -283,7 +283,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
     ctx.textAlign = "center";
     ctx.font = `900 32px ${FONT_FAMILY}`;
     ctx.fillStyle = T.textMain;
-    ctx.fillText("剧场英语 · Drama English", W / 2, H - 110);
+    ctx.fillText("影视英语场景库 · Drama English", W / 2, H - 110);
     ctx.font = `600 22px ${FONT_FAMILY}`;
     ctx.fillStyle = T.textFaint;
     ctx.fillText("语境输入 · 词汇沉淀 · 习惯养成", W / 2, H - 65);
@@ -463,7 +463,7 @@ function PosterGenerator({ me, streakDays, totalVideos, vocabCount, heatmapData,
             {!isMobile && (
               <a
                 href={posterBlobUrl}
-                download={`剧场英语打卡_${new Date().toISOString().slice(0, 10)}.png`}
+                download={`影视英语场景库打卡_${new Date().toISOString().slice(0, 10)}.png`}
                 style={{
                   display: "block",
                   width: "100%",
