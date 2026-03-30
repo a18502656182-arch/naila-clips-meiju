@@ -24,7 +24,7 @@ const C = {
 
 const BENEFITS = [
   { icon: "🔓", title: "解锁全站所有功能", sub: "视频 / 游戏 / 手账", desc: "会员专享内容全部开放，无限使用" },
-  { icon: "📚", title: "150+ 场景持续更新", sub: null, desc: "精选 YouTube 真实场景，每周持续新增" },
+  { icon: "📚", title: "影视片段持续更新", sub: null, desc: "精选英美剧、电影、动画真实片段，每周持续新增" },
   { icon: "📱", title: "手机 · 电脑 · 平板三端互通", sub: null, desc: "任意设备登录，数据实时同步" },
 ];
 
@@ -174,10 +174,10 @@ export default function RedeemPage() {
 
       {/* Logo：手机隐藏，电脑显示 */}
       <a href="/" className="logo-link" style={{ textDecoration: "none", alignItems: "center", gap: 14, marginBottom: 24 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg, ${C.accent}, ${C.cyan})`, display: "grid", placeItems: "center", color: "#fff", fontWeight: 900, fontSize: 14, boxShadow: "0 10px 24px rgba(99,102,241,0.26)" }}>EC</div>
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg, ${C.accent}, ${C.cyan})`, display: "grid", placeItems: "center", color: "#fff", fontWeight: 900, fontSize: 14, boxShadow: "0 10px 24px rgba(99,102,241,0.26)" }}>JC</div>
         <div>
-          <div style={{ fontSize: 17, fontWeight: 950, color: C.ink }}>油管英语场景库</div>
-          <div style={{ fontSize: 12, color: C.faint, marginTop: 2 }}>Real scenes · bilingual subtitles · vocabulary cards</div>
+          <div style={{ fontSize: 17, fontWeight: 950, color: C.ink }}>剧场英语</div>
+          <div style={{ fontSize: 12, color: C.faint, marginTop: 2 }}>Real dramas · bilingual subtitles · vocabulary cards</div>
         </div>
       </a>
 
