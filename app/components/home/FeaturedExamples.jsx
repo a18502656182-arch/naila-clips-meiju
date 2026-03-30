@@ -155,7 +155,7 @@ export default function FeaturedExamples({ featured }) {
   const cover = featured.cover_url || featured.video_url || "";
   const duration = formatDuration(featured.duration_sec);
   const title = featured.title || `Clip #${featured.id}`;
-  const desc = featured.description || "从真实场景里理解表达，也把表达带进自己的口语系统。";
+  const desc = featured.description || "从真实影视语料里理解表达，把地道说法带进自己的口语系统。";
   const topics = Array.isArray(featured.topics) ? featured.topics.slice(0, 1) : [];
   const isVip = featured.access_tier === "vip";
 
