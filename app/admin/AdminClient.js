@@ -724,6 +724,7 @@ function ClipsPanel({ initialClips, taxonomies: initialTaxonomiesFromProps, onTo
   const [editClip, setEditClip] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [duplicating, setDuplicating] = useState(null);
   const [loadingEdit, setLoadingEdit] = useState(null);
   const [search, setSearch] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
@@ -829,6 +830,38 @@ function ClipsPanel({ initialClips, taxonomies: initialTaxonomiesFromProps, onTo
     const r = await apiGet("clips", { offset: clips.length });
     setLoadingMore(false);
     if (r.ok) setClips((prev) => [...prev, ...r.clips]);
+  }
+
+  async function handleDuplicate(clip) {
+    if (!confirm(`确认复制「${clip.title}」？将新增一条完全相同的视频。`)) return;
+    setDuplicating(clip.id);
+    const dr = await api("clip_get_details", { id: clip.id });
+    const taxonomyHints = {};
+    (clip.topic_slugs || []).forEach(s => { taxonomyHints[s] = "genre"; });
+    (clip.channel_slugs || []).forEach(s => { taxonomyHints[s] = "show"; });
+    if (clip.difficulty_slug) taxonomyHints[clip.difficulty_slug] = "difficulty";
+    const res = await api("clip_create", {
+      title: clip.title,
+      description: clip.description || "",
+      video_url: clip.video_url || "",
+      cover_url: clip.cover_url || "",
+      duration_sec: clip.duration_sec || "",
+      access_tier: clip.access_tier || "free",
+      difficulty_slug: clip.difficulty_slug || "",
+      topic_slugs: clip.topic_slugs || [],
+      channel_slugs: clip.channel_slugs || [],
+      upload_time: clip.upload_time
+        ? new Date(clip.upload_time).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+      youtube_url: clip.youtube_url || "",
+      details_json: dr.ok && dr.details_json ? JSON.stringify(dr.details_json) : "",
+      taxonomy_hints: taxonomyHints,
+    });
+    setDuplicating(null);
+    if (!res.ok) { onToast(res.error || "复制失败", "error"); return; }
+    onToast(`已复制「${clip.title}」✓`);
+    const r = await apiGet("clips", { offset: 0 });
+    if (r.ok) setClips(r.clips);
   }
 
   return (
@@ -942,6 +975,7 @@ function ClipsPanel({ initialClips, taxonomies: initialTaxonomiesFromProps, onTo
             </div>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <Btn size="sm" variant="ghost" onClick={() => handleEdit(clip)} disabled={loadingEdit === clip.id}>{loadingEdit === clip.id ? "加载中…" : "编辑"}</Btn>
+              <Btn size="sm" variant="ghost" onClick={() => handleDuplicate(clip)} disabled={duplicating === clip.id} style={{ color: T.accent2 }}>{duplicating === clip.id ? "复制中…" : "复制"}</Btn>
               <Btn size="sm" variant="danger" onClick={() => handleDelete(clip)} disabled={deleting === clip.id}>
                 {deleting === clip.id ? "…" : "删除"}
               </Btn>
