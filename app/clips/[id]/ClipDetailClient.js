@@ -401,12 +401,12 @@ function VocabCard({ v, kind, showZh, segments, onLocate, favSet, onToggleFav })
 
   return (
     <Card style={{ padding: 14 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "start" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 900 }}>{term || "-"}</div>
+      <div style={{ display: "flex", gap: 10, alignItems: "start", minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 900, wordBreak: "break-word" }}>{term || "-"}</div>
           {v.ipa && <div style={{ marginTop: 4, fontSize: 12, color: THEME.colors.faint }}>/ {v.ipa} /</div>}
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "nowrap", alignItems: "center" }}>
           <IconBtn title="听发音" onClick={() => v.audio_url ? new Audio(v.audio_url).play() : speakEn(term)}>🔊</IconBtn>
           <IconBtn title="收藏" active={isFav} onClick={() => onToggleFav(term, kind, v)}>{isFav ? "❤️" : "🤍"}</IconBtn>
           <IconBtn title="定位到字幕" onClick={() => {
