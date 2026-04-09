@@ -4,9 +4,17 @@ import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "../../utils/supabase/client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
+const CACHE_KEY = "buy_btn_is_member";
 
 export default function BuyFloatBtn() {
-  const [hidden, setHidden] = useState(false);
+  // 先读缓存决定初始状态，避免闪烁
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return sessionStorage.getItem(CACHE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   async function checkMember() {
     try {
@@ -14,27 +22,31 @@ export default function BuyFloatBtn() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch(`${API_BASE}/api/me`, { cache: "no-store", headers });
       const data = await res.json();
-      setHidden(!!data?.is_member);
+      const isMember = !!data?.is_member;
+      // 写入缓存
+      try { sessionStorage.setItem(CACHE_KEY, isMember ? "1" : "0"); } catch {}
+      setHidden(isMember);
     } catch {
       setHidden(false);
     }
   }
 
   useEffect(() => {
-    // 页面加载时检查一次
     checkMember();
 
-    // 监听登录/登出状态变化，立即更新
     const supabase = createSupabaseBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
-        try { localStorage.removeItem("sb_access_token"); } catch {}
-        setHidden(false); // 登出后立即显示
+        try {
+          localStorage.removeItem("sb_access_token");
+          sessionStorage.setItem(CACHE_KEY, "0"); // 清缓存
+        } catch {}
+        setHidden(false);
       } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         if (session?.access_token) {
           try { localStorage.setItem("sb_access_token", session.access_token); } catch {}
         }
-        checkMember(); // 登录后立即重新检查
+        checkMember();
       }
     });
 
