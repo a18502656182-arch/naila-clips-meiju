@@ -116,6 +116,19 @@ export default function BuyResultPage() {
                 </p>
               </div>
 
+              {/* 重要提示 */}
+              <div style={{
+                background: "linear-gradient(135deg, rgba(239,68,68,0.10), rgba(239,68,68,0.06))",
+                border: "2px solid rgba(239,68,68,0.35)",
+                borderRadius: 14, padding: "12px 16px", marginBottom: 16,
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>⚠️</span>
+                <div style={{ fontSize: 13, color: "#991b1b", fontWeight: 800, lineHeight: 1.6 }}>
+                  请立即截图或复制保存兑换码！关闭页面后将无法再次查看，丢失后需联系客服找回。
+                </div>
+              </div>
+
               {/* 兑换码展示 */}
               <div style={{
                 background: C.surface,
