@@ -77,7 +77,8 @@ function planLabel(days) {
   if (days === 0 || days === null || days === undefined) return "永久卡";
   if (days >= 365) return "年卡";
   if (days >= 90) return "季卡";
-  return "月卡";
+  if (days >= 30) return "月卡";
+  return `试用卡(${days}天)`;
 }
 function copyText(text) {
   navigator.clipboard?.writeText(text).catch(() => {});
@@ -1043,6 +1044,7 @@ function CodesPanel({ initialCodes, onToast }) {
   const [search, setSearch] = useState("");
 
   const planOptions = [
+    { value: "trial", label: "试用卡 (自定义天数)", days: "3" },
     { value: "month", label: "月卡 (30天)", days: "30" },
     { value: "quarter", label: "季卡 (90天)", days: "90" },
     { value: "year", label: "年卡 (365天)", days: "365" },
@@ -1054,7 +1056,8 @@ function CodesPanel({ initialCodes, onToast }) {
     if (filter === "active" && !(c.is_active && !used)) return false;
     if (filter === "used" && !used) return false;
     if (filter === "inactive" && c.is_active) return false;
-    if (planFilter === "month" && !(c.days > 0 && c.days < 90)) return false;
+    if (planFilter === "trial" && !(c.days > 0 && c.days < 30)) return false;
+    if (planFilter === "month" && !(c.days >= 30 && c.days < 90)) return false;
     if (planFilter === "quarter" && !(c.days >= 90 && c.days < 365)) return false;
     if (planFilter === "year" && !(c.days >= 365)) return false;
     if (planFilter === "lifetime" && c.days !== 0) return false;
@@ -1063,10 +1066,17 @@ function CodesPanel({ initialCodes, onToast }) {
   });
 
   async function handleGenerate() {
+    const days = Number(genOpts.days);
+    // 试用卡：1天到29天
+    if (genOpts.plan === "trial") {
+      if (!days || days < 1 || days >= 30) {
+        onToast("试用卡天数需在 1~29 天之间", "error"); return;
+      }
+    }
     setGenerating(true);
     const res = await api("codes_generate", {
       plan: genOpts.plan,
-      days: Number(genOpts.days),
+      days: days,
       count: Number(genOpts.count),
     });
     setGenerating(false);
@@ -1130,7 +1140,7 @@ function CodesPanel({ initialCodes, onToast }) {
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        {[["all","全部卡种"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
+        {[["all","全部卡种"], ["trial","试用卡"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
           <button key={v} onClick={() => setPlanFilter(v)} style={{
             padding: "5px 14px", borderRadius: T.radius.pill, fontSize: 12, fontWeight: 700,
             cursor: "pointer", border: `1px solid ${planFilter === v ? T.vip : T.border2}`,
@@ -1422,11 +1432,106 @@ function UsersPanel({ initialUsers, onToast }) {
 }
 
 // ══════════════════════════════════════════════════════
+// 模块五：订单管理
+// ══════════════════════════════════════════════════════
+function OrdersPanel({ initialOrders, onToast }) {
+  const [orders, setOrders] = useState(initialOrders);
+  const [search, setSearch] = useState("");
+
+  const PLAN_LABELS = {
+    month: "月卡", quarter: "季卡", year: "年卡", lifetime: "永久卡", trial: "试用卡",
+  };
+
+  const filtered = orders.filter((o) => {
+    if (!search.trim()) return true;
+    const q = search.trim().toLowerCase();
+    return (
+      o.out_trade_no?.includes(q) ||
+      o.redeem_code?.toLowerCase().includes(q)
+    );
+  });
+
+  function copyText(text) {
+    navigator.clipboard?.writeText(text).catch(() => {});
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: T.ink, margin: 0, flex: 1 }}>📦 订单管理</h2>
+        <div style={{ display: "flex", gap: 8, fontSize: 12, color: T.muted }}>
+          <span>总计 <b style={{ color: T.ink }}>{orders.length}</b></span>
+          <span>已支付 <b style={{ color: T.good }}>{orders.filter(o => o.status === "paid").length}</b></span>
+          <span>待支付 <b style={{ color: T.warn }}>{orders.filter(o => o.status === "pending").length}</b></span>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索订单号或兑换码…"
+          style={{
+            padding: "7px 14px", borderRadius: T.radius.pill, fontSize: 13,
+            background: T.surface2, border: `1px solid ${T.border2}`, color: T.ink, outline: "none", width: 240,
+          }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: "center", padding: 40, color: T.faint }}>暂无订单</div>
+        )}
+        {filtered.map((o) => {
+          const isPaid = o.status === "paid";
+          return (
+            <div key={o.id} style={{
+              background: T.surface2, borderRadius: T.radius.md,
+              border: `1px solid ${isPaid ? "rgba(16,185,129,0.20)" : T.border}`,
+              padding: "12px 16px",
+              display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: T.radius.pill,
+                    background: isPaid ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                    color: isPaid ? T.good : T.warn,
+                    border: `1px solid ${isPaid ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)"}`,
+                  }}>{isPaid ? "已支付" : "待支付"}</span>
+                  <span style={{ fontSize: 12, color: T.muted }}>{PLAN_LABELS[o.plan] || o.plan}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: T.ink }}>¥{o.amount}</span>
+                  <span style={{ fontSize: 11, color: T.faint }}>
+                    {new Date(o.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 12, color: T.faint }}>
+                    订单号：<code style={{ fontFamily: "monospace", color: T.muted, fontSize: 12 }}>{o.out_trade_no}</code>
+                    <button onClick={() => { copyText(o.out_trade_no); onToast("已复制 ✓"); }} style={{ marginLeft: 6, fontSize: 11, padding: "1px 6px", borderRadius: 4, border: `1px solid ${T.border2}`, background: T.surface3, color: T.faint, cursor: "pointer" }}>复制</button>
+                  </div>
+                  <div style={{ fontSize: 12, color: T.faint }}>
+                    兑换码：
+                    <code style={{ fontFamily: "monospace", color: isPaid ? T.good : T.faint, fontWeight: isPaid ? 800 : 400, fontSize: 13, letterSpacing: 1 }}>
+                      {isPaid ? o.redeem_code : "（未支付）"}
+                    </code>
+                    {isPaid && (
+                      <button onClick={() => { copyText(o.redeem_code); onToast("已复制 ✓"); }} style={{ marginLeft: 6, fontSize: 11, padding: "1px 6px", borderRadius: 4, border: `1px solid ${T.border2}`, background: T.surface3, color: T.faint, cursor: "pointer" }}>复制</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════
 // 主入口
 // ══════════════════════════════════════════════════════
 export default function AdminClient({
   adminEmail, initialClips, initialTaxonomies,
-  initialRedeemCodes, initialUsers, stats, token,
+  initialRedeemCodes, initialUsers, initialOrders, stats, token,
 }) {
   useEffect(() => { if (token) setAdminToken(token); }, [token]);
 
@@ -1457,6 +1562,7 @@ export default function AdminClient({
     { id: "overview", label: "📊 概览" },
     { id: "clips", label: "🎬 视频" },
     { id: "codes", label: "🎫 兑换码" },
+    { id: "orders", label: "📦 订单" },
     { id: "users", label: "👤 用户" },
   ];
 
@@ -1507,6 +1613,12 @@ export default function AdminClient({
         {tab === "codes" && (
           <CodesPanel
             initialCodes={initialRedeemCodes}
+            onToast={onToast}
+          />
+        )}
+        {tab === "orders" && (
+          <OrdersPanel
+            initialOrders={initialOrders || []}
             onToast={onToast}
           />
         )}
