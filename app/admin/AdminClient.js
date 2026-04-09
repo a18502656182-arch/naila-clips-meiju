@@ -1250,6 +1250,18 @@ function UsersPanel({ initialUsers, onToast }) {
   const [memberDays, setMemberDays] = useState("30");
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [detailModal, setDetailModal] = useState(null); // { user, data, loading }
+
+  async function openDetail(u) {
+    setDetailModal({ user: u, data: null, loading: true });
+    const res = await api("user_detail", { user_id: u.id });
+    if (res.ok) {
+      setDetailModal({ user: u, data: res, loading: false });
+    } else {
+      setDetailModal({ user: u, data: null, loading: false });
+      onToast("加载失败", "error");
+    }
+  }
 
   async function handleSearch(q) {
     setSearch(q);
@@ -1372,13 +1384,111 @@ function UsersPanel({ initialUsers, onToast }) {
                   <span style={{ fontSize: 11, color: T.faint }}>注册：{fmt(u.created_at)}</span>
                 </div>
               </div>
-              <Btn size="sm" variant="ghost" onClick={() => { setMemberModal(u); setMemberDays("30"); }}>
-                调整会员
-              </Btn>
+              <div style={{ display: "flex", gap: 6 }}>
+                <Btn size="sm" variant="ghost" onClick={() => openDetail(u)}>
+                  查看详情
+                </Btn>
+                <Btn size="sm" variant="ghost" onClick={() => { setMemberModal(u); setMemberDays("30"); }}>
+                  调整会员
+                </Btn>
+              </div>
             </div>
           );
         })}
       </div>
+
+      {/* 用户详情弹窗 */}
+      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title="👤 用户详情" width={560}>
+        {detailModal && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ padding: "10px 14px", background: T.surface3, borderRadius: T.radius.md }}>
+              <div style={{ fontWeight: 800, color: T.ink }}>{detailModal.user.username || detailModal.user.email}</div>
+              <div style={{ fontSize: 12, color: T.faint, marginTop: 2 }}>ID: {detailModal.user.id?.slice(0, 16)}...</div>
+            </div>
+            {detailModal.loading && <div style={{ textAlign: "center", padding: 24, color: T.faint }}>加载中...</div>}
+            {!detailModal.loading && !detailModal.data && <div style={{ color: T.warn, fontSize: 13 }}>加载失败</div>}
+            {detailModal.data && (() => {
+              const d = detailModal.data;
+              const GAME_NAMES = { matchMadness: "配对狂热", fillBlank: "填词挑战", listenWrite: "听写练习" };
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {/* 游戏分数 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>🎮 游戏分数</div>
+                    {(!d.game_scores || d.game_scores.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无游戏记录</div>
+                    ) : (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {d.game_scores.map(g => (
+                          <div key={g.game_id} style={{ padding: "8px 14px", background: T.surface3, borderRadius: T.radius.md, minWidth: 120 }}>
+                            <div style={{ fontSize: 12, color: T.muted, marginBottom: 4 }}>{GAME_NAMES[g.game_id] || g.game_id}</div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: T.ink }}>最高 {g.best_score}</div>
+                            <div style={{ fontSize: 11, color: T.faint }}>共玩 {g.play_count} 次</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 收藏词汇 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      📚 收藏词汇（{d.vocab?.length || 0} 个）
+                    </div>
+                    {(!d.vocab || d.vocab.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无收藏词汇</div>
+                    ) : (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxHeight: 120, overflowY: "auto" }}>
+                        {d.vocab.map((v, i) => (
+                          <span key={i} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, background: T.surface3, color: T.ink, border: `1px solid ${T.border}` }}>
+                            {v.term}
+                            {v.mastery_level > 0 && <span style={{ color: T.good, marginLeft: 4 }}>{"★".repeat(Math.min(v.mastery_level, 3))}</span>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 书签 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      🔖 书签（{d.bookmarks?.length || 0} 个）
+                    </div>
+                    {(!d.bookmarks || d.bookmarks.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无书签</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 120, overflowY: "auto" }}>
+                        {d.bookmarks.map((b, i) => (
+                          <div key={i} style={{ fontSize: 12, color: T.muted, padding: "4px 8px", background: T.surface3, borderRadius: 6 }}>
+                            {b.title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 观看记录 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      👁 观看记录（{d.view_logs?.length || 0} 条）
+                    </div>
+                    {(!d.view_logs || d.view_logs.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无观看记录</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 120, overflowY: "auto" }}>
+                        {d.view_logs.slice(0, 10).map((v, i) => (
+                          <div key={i} style={{ fontSize: 12, color: T.muted, padding: "4px 8px", background: T.surface3, borderRadius: 6, display: "flex", justifyContent: "space-between" }}>
+                            <span>{v.title}</span>
+                            <span style={{ color: T.faint }}>{v.viewed_date}</span>
+                          </div>
+                        ))}
+                        {d.view_logs.length > 10 && <div style={{ fontSize: 11, color: T.faint }}>...共 {d.view_logs.length} 条</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!memberModal} onClose={() => setMemberModal(null)} title="✨ 调整会员时长" width={400}>
         {memberModal && (
@@ -1514,6 +1624,11 @@ function OrdersPanel({ initialOrders, onToast }) {
                     </code>
                     {isPaid && (
                       <button onClick={() => { copyText(o.redeem_code); onToast("已复制 ✓"); }} style={{ marginLeft: 6, fontSize: 11, padding: "1px 6px", borderRadius: 4, border: `1px solid ${T.border2}`, background: T.surface3, color: T.faint, cursor: "pointer" }}>复制</button>
+                    )}
+                    {isPaid && (
+                      <span style={{ marginLeft: 10, fontSize: 11, color: o.redeemed_by ? T.good : T.warn, fontWeight: 700 }}>
+                        {o.redeemed_by ? `已兑换 · ${o.redeemed_by}` : "未兑换"}
+                      </span>
                     )}
                   </div>
                 </div>
