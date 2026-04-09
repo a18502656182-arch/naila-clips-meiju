@@ -37,16 +37,16 @@ export default function BuyFloatBtn() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 4,
-        padding: "12px 18px",
-        borderRadius: 20,
+        gap: 5,
+        padding: "14px 24px",
+        borderRadius: 22,
         background: "linear-gradient(135deg, #7c3aed, #6366f1)",
         color: "#fff",
         textDecoration: "none",
         boxShadow: "0 8px 28px rgba(99,102,241,0.45)",
         cursor: "pointer",
         transition: "all 0.2s ease",
-        minWidth: 120,
+        minWidth: 148,
         textAlign: "center",
         animation: "floatIn 0.3s ease",
       }}
@@ -59,18 +59,18 @@ export default function BuyFloatBtn() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: "0.02em" }}>
+      <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: "0.02em" }}>
         加入会员
       </div>
-      <div style={{ fontSize: 11, opacity: 0.88, fontWeight: 700 }}>
+      <div style={{ fontSize: 12, opacity: 0.88, fontWeight: 700 }}>
         解锁全部影视片段
       </div>
       <div style={{
-        marginTop: 4,
-        fontSize: 10,
+        marginTop: 5,
+        fontSize: 11,
         background: "rgba(255,255,255,0.18)",
         borderRadius: 999,
-        padding: "2px 8px",
+        padding: "3px 10px",
         fontWeight: 700,
         letterSpacing: "0.03em",
       }}>
