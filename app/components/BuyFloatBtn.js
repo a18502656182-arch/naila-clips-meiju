@@ -1,26 +1,44 @@
 "use client";
 // app/components/BuyFloatBtn.js
 import { useEffect, useState } from "react";
+import { createSupabaseBrowserClient } from "../../utils/supabase/client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
 export default function BuyFloatBtn() {
-  // 默认显示，确认是会员后才隐藏，避免延迟感
   const [hidden, setHidden] = useState(false);
 
-  useEffect(() => {
-    async function check() {
-      try {
-        const token = localStorage.getItem("sb_access_token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`${API_BASE}/api/me`, { cache: "no-store", headers });
-        const data = await res.json();
-        if (data?.is_member) setHidden(true);
-      } catch {
-        // 请求失败保持显示
-      }
+  async function checkMember() {
+    try {
+      const token = localStorage.getItem("sb_access_token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE}/api/me`, { cache: "no-store", headers });
+      const data = await res.json();
+      setHidden(!!data?.is_member);
+    } catch {
+      setHidden(false);
     }
-    check();
+  }
+
+  useEffect(() => {
+    // 页面加载时检查一次
+    checkMember();
+
+    // 监听登录/登出状态变化，立即更新
+    const supabase = createSupabaseBrowserClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        try { localStorage.removeItem("sb_access_token"); } catch {}
+        setHidden(false); // 登出后立即显示
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (session?.access_token) {
+          try { localStorage.setItem("sb_access_token", session.access_token); } catch {}
+        }
+        checkMember(); // 登录后立即重新检查
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (hidden) return null;
