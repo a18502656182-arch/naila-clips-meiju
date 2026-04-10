@@ -1,6 +1,48 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 
+const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/94686906-f46c-44cc-b53c-0d6b77166500/qr";
+const WECHAT_ID = "wll74748585";
+
+function WechatModal({ onClose }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    try {
+      navigator.clipboard.writeText(WECHAT_ID).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200); });
+    } catch {
+      const el = document.createElement("textarea"); el.value = WECHAT_ID;
+      document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el);
+      setCopied(true); setTimeout(() => setCopied(false), 2200);
+    }
+  }
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(11,18,32,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, backdropFilter: "blur(4px)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, border: "1px solid rgba(11,18,32,0.08)", boxShadow: "0 24px 60px rgba(11,18,32,0.18)", padding: "20px 20px 16px", width: "100%", maxWidth: 300 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 900, color: "#0b1220" }}>💬 联系客服</div>
+          <button onClick={onClose} style={{ width: 26, height: 26, borderRadius: "50%", border: "1px solid rgba(11,18,32,0.10)", background: "rgba(11,18,32,0.04)", cursor: "pointer", color: "#94a3b8", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+        </div>
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(11,18,32,0.08)", marginBottom: 12 }}>
+          <img src={WECHAT_QR_URL} alt="微信二维码" style={{ width: "100%", display: "block" }}
+            onError={e => { e.target.style.display = "none"; e.target.parentNode.innerHTML = '<div style="font-size:13px;color:rgba(11,18,32,0.38);text-align:center;padding:32px 16px;line-height:1.8">图片加载失败<br/>请直接搜索下方微信号</div>'; }} />
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(11,18,32,0.5)", textAlign: "center", marginBottom: 10, lineHeight: 1.6 }}>
+          截图后用微信扫码识别，或搜索微信号
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.14)", marginBottom: 12 }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "#0b1220", flex: 1 }}>{WECHAT_ID}</span>
+          <button onClick={copy} style={{ padding: "4px 10px", borderRadius: 7, fontSize: 12, fontWeight: 800, border: copied ? "1px solid rgba(16,185,129,0.30)" : "1px solid rgba(99,102,241,0.22)", background: copied ? "rgba(16,185,129,0.09)" : "rgba(99,102,241,0.09)", color: copied ? "#10b981" : "#4f46e5", cursor: "pointer", whiteSpace: "nowrap" }}>
+            {copied ? "✓ 已复制" : "复制"}
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(11,18,32,0.38)", textAlign: "center", lineHeight: 1.7 }}>
+          购买兑换码 · 售后 · 网站建议，均可联系
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const LINES = {
   welcome: [
     "你终于来了，我还以为你放弃学英语了呢 (叹气)",
@@ -120,6 +162,7 @@ export default function PenguinMascot() {
   const [text, setText] = useState("");
   const [bounce, setBounce] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
+  const [showWechat, setShowWechat] = useState(false);
   const [minimized, setMinimized] = useState(() => {
     try { return localStorage.getItem(STORAGE_HIDDEN) === "1"; } catch { return false; }
   });
@@ -286,6 +329,7 @@ export default function PenguinMascot() {
 
   return (
     <>
+      {showWechat && <WechatModal onClose={() => setShowWechat(false)} />}
       <style>{`
         @keyframes pFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
         @keyframes pBounce { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(-4px)} }
@@ -333,9 +377,15 @@ export default function PenguinMascot() {
           }}
         >🐧</div>
 
-        {/* 隐藏 */}
+        {/* 底部按钮行：客服 + 隐藏 */}
         {!minimized && !dragging && (
-          <button onClick={() => { setMinimized(true); setShowBubble(false); try { localStorage.setItem(STORAGE_HIDDEN, "1"); } catch {} }} style={{ fontSize: 10, color: "rgba(11,18,32,0.40)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px", fontWeight: 900 }}>隐藏</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button
+              onClick={() => setShowWechat(true)}
+              style={{ fontSize: 10, color: "#fff", background: "linear-gradient(135deg,#059669,#10b981)", border: "none", cursor: "pointer", padding: "2px 8px", borderRadius: 999, fontWeight: 900, boxShadow: "0 2px 8px rgba(16,185,129,0.40)", whiteSpace: "nowrap" }}
+            >客服</button>
+            <button onClick={() => { setMinimized(true); setShowBubble(false); try { localStorage.setItem(STORAGE_HIDDEN, "1"); } catch {} }} style={{ fontSize: 10, color: "rgba(11,18,32,0.40)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px", fontWeight: 900 }}>隐藏</button>
+          </div>
         )}
       </div>
     </>
