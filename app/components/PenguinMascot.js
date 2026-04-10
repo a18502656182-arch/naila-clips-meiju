@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/94686906-f46c-44cc-b53c-0d6b77166500/qr";
+const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/13252c4c-662b-4537-9ad0-c571d226af00/qr";
 const WECHAT_ID = "wll74748585";
 
 function WechatModal({ onClose }) {
