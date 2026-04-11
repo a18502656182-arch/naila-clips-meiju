@@ -177,15 +177,7 @@ export default async function Page() {
               >
                 影视英语场景库
               </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 12,
-                  color: THEME.colors.faint,
-                }}
-              >
-                Real dramas · bilingual subtitles · vocabulary cards
-              </div>
+
             </div>
           </div>
 
