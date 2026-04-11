@@ -118,22 +118,20 @@ export default function GuidePage() {
             background: rgba(255,255,255,0.07);
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.1);
-            padding: 22px 24px;
+            padding: 28px 28px;
             display: grid;
             grid-template-columns: 1fr 1px 1fr;
-            gap: 20px;
+            gap: 28px;
             align-items: center;
           }
           .d-hero-card-divider { background: rgba(255,255,255,0.08); align-self: stretch; }
-          .d-hero-card-title { font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 6px; }
-          .d-hero-card-desc { font-size: 12px; color: rgba(255,255,255,0.52); line-height: 1.7; margin-bottom: 14px; }
+          .d-hero-card-title { font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 20px; }
           .d-hero-btn {
-            display: block; text-align: center; padding: 10px 0; border-radius: 999px;
+            display: block; text-align: center; padding: 11px 0; border-radius: 999px;
             background: linear-gradient(135deg, #8b5cf6, #6366f1);
             color: #fff; text-decoration: none; font-size: 13px; font-weight: 800;
             box-shadow: 0 4px 14px rgba(99,102,241,0.4);
           }
-          .d-hero-wechat-label { font-size: 11px; color: rgba(255,255,255,0.45); margin-bottom: 6px; }
 
           .d-body { padding: 52px 64px 64px; background: #f7f8fd; display: flex; flex-direction: column; gap: 52px; }
 
@@ -267,14 +265,12 @@ export default function GuidePage() {
           </div>
           <div className="d-hero-card">
             <div>
-              <div className="d-hero-card-title">✨ 关于会员</div>
-              <div className="d-hero-card-desc">免费片段随便看，会员解锁全站所有内容。支持支付宝购买，有月卡、季卡、年卡和永久卡可以选。</div>
-              <a href="/buy" className="d-hero-btn">立即开通会员 →</a>
+              <div className="d-hero-card-title">✨ 开通会员</div>
+              <a href="/buy" className="d-hero-btn">立即开通 →</a>
             </div>
             <div className="d-hero-card-divider" />
             <div>
               <div className="d-hero-card-title">💬 联系客服</div>
-              <div className="d-hero-card-desc">购买咨询、使用问题、对网站的任何建议都可以联系我们。</div>
               <WechatButton btnStyle="light" />
             </div>
           </div>
