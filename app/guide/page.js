@@ -240,9 +240,11 @@ export default function GuidePage() {
             <div className="m-bottom-desc">免费片段随便看，会员解锁全站所有内容。支持支付宝购买，有月卡、季卡、年卡和永久卡可以选。</div>
             <a href="/buy" className="m-btn">立即开通会员 →</a>
           </div>
-          <div className="m-bottom-card">
-            <div className="m-bottom-title">💬 联系客服</div>
-            <div className="m-bottom-desc">购买咨询、使用问题、对网站的任何建议都可以加微信联系我们。</div>
+          <div className="m-bottom-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div>
+              <div className="m-bottom-title" style={{ marginBottom: 4 }}>💬 联系客服</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>购买咨询 · 使用问题</div>
+            </div>
             <WechatButton btnStyle="light" />
           </div>
         </div>
