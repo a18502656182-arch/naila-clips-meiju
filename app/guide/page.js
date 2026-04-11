@@ -2,8 +2,6 @@
 import Link from "next/link";
 import WechatButton from "./WechatButton";
 
-const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/94686906-f46c-44cc-b53c-0d6b77166500/qr";
-const WECHAT_ID = "wll74748585";
 
 const STEPS = [
   { num: "1", title: "选片段，建语感", content: "在首页按话题或剧集筛选你感兴趣的内容，感兴趣的主题学起来事半功倍。点开一个片段，先不看字幕整体看一遍，熟悉语境和语速。" },
@@ -95,11 +93,6 @@ export default function GuidePage() {
           color: #fff; text-decoration: none; font-size: 14px; font-weight: 800;
           box-shadow: 0 6px 16px rgba(99,102,241,0.35);
         }
-        .m-wechat-row { display: flex; align-items: center; gap: 14px; }
-        .m-qr { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
-        .m-qr img { width: 100%; display: block; }
-        .m-wechat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
-        .m-wechat-id { font-size: 16px; font-weight: 800; color: #fff; }
 
         /* ══ 电脑端 ══ */
         @media (min-width: 900px) {
@@ -250,13 +243,7 @@ export default function GuidePage() {
           <div className="m-bottom-card">
             <div className="m-bottom-title">💬 联系客服</div>
             <div className="m-bottom-desc">购买咨询、使用问题、对网站的任何建议都可以加微信联系我们。</div>
-            <div className="m-wechat-row">
-              <div className="m-qr"><img src={WECHAT_QR_URL} alt="微信客服" /></div>
-              <div>
-                <div className="m-wechat-label">扫码或搜索微信号</div>
-                <div className="m-wechat-id">{WECHAT_ID}</div>
-              </div>
-            </div>
+            <WechatButton btnStyle="light" />
           </div>
         </div>
       </div>
