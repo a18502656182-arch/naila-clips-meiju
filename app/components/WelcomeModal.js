@@ -1,19 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "meiju_welcome_seen_v1";
+import { createSupabaseBrowserClient } from "../../utils/supabase/client";
 
 export default function WelcomeModal() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setShow(true);
-    } catch {}
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) setShow(true);
+    });
   }, []);
 
   function close() {
-    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
     setShow(false);
   }
 
