@@ -23,7 +23,10 @@ async function queryYoudao(word) {
       q: word, from: "en", to: "zh-CHS",
       appKey: YOUDAO_APP_ID, salt, sign, signType: "v3", curtime,
     });
-    const r = await fetch(`${YOUDAO_API}?${params}`);
+    const controller1 = new AbortController();
+    const t1 = setTimeout(() => controller1.abort(), 5000);
+    const r = await fetch(`${YOUDAO_API}?${params}`, { signal: controller1.signal });
+    clearTimeout(t1);
     if (!r.ok) return null;
     const data = await r.json();
     // 调试：把完整返回记录到控制台
@@ -43,7 +46,10 @@ async function queryYoudao(word) {
 
 async function queryDictionary(word) {
   try {
-    const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    const controller2 = new AbortController();
+    const t2 = setTimeout(() => controller2.abort(), 5000);
+    const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`, { signal: controller2.signal });
+    clearTimeout(t2);
     if (!r.ok) return null;
     const data = await r.json();
     if (!Array.isArray(data) || !data[0]) return null;
