@@ -519,6 +519,8 @@ function TermPopup({ popup, onClose }) {
   const partOfSpeech = lookupData?.partOfSpeech || "";
   const zhMeaning = v?.meaning_zh || lookupData?.zh || "";
   const audioUrl = v?.audio_url || lookupData?.audio || "";
+  const exampleEn = v?.example_en || "";
+  const exampleZh = v?.example_zh || "";
 
   return (
     <>
@@ -527,7 +529,7 @@ function TermPopup({ popup, onClose }) {
         position: "fixed", left: safeX, top: safeY, zIndex: 9999,
         background: "#fff", border: "1px solid rgba(99,102,241,0.2)",
         borderRadius: 16, boxShadow: "0 12px 40px rgba(11,18,32,0.18)",
-        padding: "14px 16px", width: 230, maxWidth: "calc(100vw - 32px)",
+        padding: "14px 16px", width: 240, maxWidth: "calc(100vw - 32px)",
         animation: "bIn 200ms cubic-bezier(.2,.9,.2,1)",
       }}>
         <button onClick={onClose} style={{ position: "absolute", top: 8, right: 8, width: 20, height: 20, borderRadius: "50%", border: "none", background: "rgba(11,18,32,0.07)", cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>✕</button>
@@ -543,6 +545,12 @@ function TermPopup({ popup, onClose }) {
             )}
             {zhMeaning && (
               <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{zhMeaning}</div>
+            )}
+            {(exampleEn || exampleZh) && (
+              <div style={{ marginTop: 6, padding: "7px 10px", background: "#f3fbff", borderRadius: 10, border: "1px solid #cfe6ff", lineHeight: 1.55 }}>
+                {exampleEn && <div style={{ fontSize: 12, color: "#0b5aa6", fontWeight: 600 }}>{exampleEn}</div>}
+                {exampleZh && <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{exampleZh}</div>}
+              </div>
             )}
             <button
               onClick={() => { if (audioUrl) { new Audio(audioUrl).play().catch(() => speakEn(term)); } else { speakEn(term); } }}
