@@ -173,9 +173,19 @@ export default async function Page() {
                   fontWeight: 950,
                   color: THEME.colors.ink,
                   letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
                 }}
               >
-                影视英语场景库
+                <span className="title-desktop">影视英语场景库</span>
+                <span className="title-mobile">影视英语<br />场景库</span>
+                <style>{`
+                  .title-desktop { display: inline; }
+                  .title-mobile { display: none; }
+                  @media (max-width: 640px) {
+                    .title-desktop { display: none; }
+                    .title-mobile { display: inline; }
+                  }
+                `}</style>
               </div>
 
             </div>
