@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: "📚", title: "词汇卡", desc: "精选单词、短语和地道表达，附音标、中英释义和例句，点击字幕块直接播放对应片段。" },
   { icon: "🎧", title: "听写模式", desc: "播放一句自己写下听到的，配合单句循环反复听，练听力的神器。" },
   { icon: "❤️", title: "收藏", desc: "收藏喜欢的片段和词汇，随时回来复习，词汇本里还能标记掌握程度。" },
-  { icon: "🎮", title: "词汇游戏", desc: "6种游戏模式：气泡拼写、连连看、单词探探、台词磁力贴、盲听气球、极速二选一。" },
+  { icon: "🎮", title: "词汇游戏", desc: "6种游戏模式：气泡拼写、连连看、单词探探、台词磁力贴、盲听气balloon、极速二选一。" },
   { icon: "📒", title: "学习手帐", desc: "记录每天的学习轨迹，查看热力图和连续打卡天数，生成打卡海报分享给朋友。" },
 ];
 
@@ -27,123 +27,405 @@ export default function GuidePage() {
   return (
     <div style={{ minHeight: "100vh", background: "#f7f8fd", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       <style>{`
-        .guide-layout { display: flex; flex-direction: column; min-height: 100vh; }
-        .guide-left { background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%); color: #fff; padding: 40px 32px; }
-        .guide-right { padding: 32px 20px 60px; overflow-y: auto; }
-        .feature-grid { display: flex; flex-direction: column; gap: 8px; }
+        /* ── 顶部导航 ── */
+        .guide-nav {
+          background: rgba(255,255,255,0.95);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(11,18,32,0.07);
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+
+        /* ── 手机端布局 ── */
+        .guide-mobile { display: block; }
+        .guide-desktop { display: none; }
+
+        .mobile-section {
+          padding: 28px 20px;
+        }
+        .mobile-hero {
+          background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);
+          color: #fff;
+          padding: 32px 20px 28px;
+        }
+        .mobile-feature-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        .mobile-feature-card {
+          background: #fff;
+          border-radius: 12px;
+          border: 1px solid rgba(11,18,32,0.07);
+          padding: 12px;
+        }
+        .mobile-step-card {
+          background: #fff;
+          border-radius: 12px;
+          border: 1px solid rgba(11,18,32,0.07);
+          padding: 14px 16px;
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          margin-bottom: 8px;
+        }
+        .mobile-bottom {
+          background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);
+          color: #fff;
+          padding: 32px 20px 40px;
+        }
+        .mobile-card {
+          background: rgba(255,255,255,0.08);
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.12);
+          padding: 16px 18px;
+          margin-bottom: 12px;
+        }
+
+        /* ── 电脑端布局 ── */
         @media (min-width: 900px) {
-          .guide-layout { flex-direction: row; height: 100vh; overflow: hidden; }
-          .guide-left { width: 340px; min-width: 300px; flex-shrink: 0; overflow-y: auto; position: sticky; top: 0; height: 100vh; }
-          .guide-right { flex: 1; overflow-y: auto; padding: 40px 48px 60px; }
-          .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .guide-mobile { display: none; }
+          .guide-desktop { display: block; }
+
+          /* 顶部 Hero 横幅 */
+          .desktop-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #312e81 100%);
+            color: #fff;
+            padding: 64px 80px 56px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 40px;
+          }
+          .desktop-hero-title {
+            font-size: 48px;
+            font-weight: 950;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin: 0 0 16px;
+          }
+          .desktop-hero-sub {
+            font-size: 17px;
+            color: rgba(255,255,255,0.62);
+            line-height: 1.8;
+            max-width: 560px;
+            margin: 0;
+          }
+          .desktop-hero-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+            min-width: 200px;
+          }
+
+          /* 主内容区 */
+          .desktop-body {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 56px 80px 80px;
+          }
+          .desktop-section-title {
+            font-size: 28px;
+            font-weight: 950;
+            color: #0b1220;
+            margin: 0 0 24px;
+            letter-spacing: -0.01em;
+          }
+
+          /* 功能网格：3列 */
+          .desktop-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 64px;
+          }
+          .desktop-feature-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(11,18,32,0.07);
+            padding: 20px 22px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            box-shadow: 0 2px 12px rgba(11,18,32,0.04);
+          }
+          .desktop-feature-icon {
+            font-size: 26px;
+            flex-shrink: 0;
+            margin-top: 2px;
+          }
+          .desktop-feature-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0b1220;
+            margin-bottom: 6px;
+          }
+          .desktop-feature-desc {
+            font-size: 14px;
+            color: rgba(11,18,32,0.55);
+            line-height: 1.75;
+          }
+
+          /* 学习步骤：2列 */
+          .desktop-steps-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 64px;
+          }
+          .desktop-step-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(11,18,32,0.07);
+            padding: 20px 22px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            box-shadow: 0 2px 12px rgba(11,18,32,0.04);
+          }
+          .desktop-step-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(124,58,237,0.08));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+          }
+          .desktop-step-num {
+            font-size: 11px;
+            font-weight: 900;
+            color: #6366f1;
+            margin-bottom: 4px;
+            letter-spacing: 0.06em;
+          }
+          .desktop-step-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: #0b1220;
+            margin-bottom: 6px;
+          }
+          .desktop-step-content {
+            font-size: 14px;
+            color: rgba(11,18,32,0.58);
+            line-height: 1.8;
+          }
+
+          /* 底部：会员 + 客服横排 */
+          .desktop-bottom {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);
+            border-radius: 20px;
+            padding: 40px 48px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            color: #fff;
+          }
+          .desktop-bottom-card {
+            background: rgba(255,255,255,0.07);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 24px 28px;
+          }
+          .desktop-bottom-title {
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 10px;
+          }
+          .desktop-bottom-desc {
+            font-size: 14px;
+            color: rgba(255,255,255,0.62);
+            line-height: 1.8;
+            margin-bottom: 20px;
+          }
         }
       `}</style>
 
-      {/* 顶部导航（手机端显示） */}
-      <div style={{
-        background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(11,18,32,0.07)",
-        padding: "12px 20px", display: "flex", alignItems: "center", gap: 12,
-      }}>
+      {/* 顶部导航 */}
+      <div className="guide-nav">
         <Link href="/" style={{ fontSize: 13, color: "rgba(11,18,32,0.5)", textDecoration: "none", fontWeight: 600 }}>← 回首页</Link>
         <span style={{ color: "rgba(11,18,32,0.2)" }}>|</span>
         <span style={{ fontSize: 14, fontWeight: 800, color: "#0b1220" }}>使用指南</span>
       </div>
 
-      <div className="guide-layout">
+      {/* ══════════════ 手机端 ══════════════ */}
+      <div className="guide-mobile">
 
-        {/* 左栏：介绍 + 会员 + 客服 */}
-        <div className="guide-left">
-          <div style={{ fontSize: 28, marginBottom: 10 }}>📖</div>
-          <h1 style={{ fontSize: 22, fontWeight: 950, margin: "0 0 12px", lineHeight: 1.3 }}>
-            怎么用这个网站<br />学英语
-          </h1>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.8, margin: "0 0 28px" }}>
-            精选来自美剧、电影、动画的真实英语片段，覆盖日常生活、职场、旅行、人文等实用场景，90% 来自英语核心圈母语演员的真实对话。
+        {/* Hero */}
+        <div className="mobile-hero">
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: 700, marginBottom: 10, letterSpacing: "0.06em" }}>DRAMA SCENE LIBRARY</div>
+          <h1 style={{ fontSize: 26, fontWeight: 950, margin: "0 0 10px", lineHeight: 1.3 }}>怎么用这个网站学英语</h1>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.62)", lineHeight: 1.8, margin: 0 }}>
+            精选来自美剧、电影、动画的真实英语片段，双语字幕 + 词汇卡，帮你在真实语境里学地道英语。
           </p>
+        </div>
 
-          {/* 会员 */}
-          <div style={{
-            background: "rgba(255,255,255,0.08)", borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.12)", padding: "16px 18px", marginBottom: 12,
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 6 }}>✨ 关于会员</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginBottom: 14 }}>
+        {/* 功能介绍 */}
+        <div className="mobile-section">
+          <h2 style={{ fontSize: 17, fontWeight: 900, color: "#0b1220", margin: "0 0 14px" }}>🛠️ 这里有什么</h2>
+          <div className="mobile-feature-grid">
+            {FEATURES.map((f, i) => (
+              <div key={i} className="mobile-feature-card">
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{f.icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#0b1220", marginBottom: 3 }}>{f.title}</div>
+                <div style={{ fontSize: 12, color: "rgba(11,18,32,0.55)", lineHeight: 1.65 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 学习步骤 */}
+        <div style={{ padding: "0 20px 28px" }}>
+          <h2 style={{ fontSize: 17, fontWeight: 900, color: "#0b1220", margin: "0 0 14px" }}>📋 完整学习步骤</h2>
+          {STEPS.map((s, i) => (
+            <div key={i} className="mobile-step-card">
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(124,58,237,0.08))",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+              }}>{s.icon}</div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 900, color: "#6366f1", marginBottom: 2, letterSpacing: "0.06em" }}>STEP {s.num}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#0b1220", marginBottom: 4 }}>{s.title}</div>
+                <div style={{ fontSize: 13, color: "rgba(11,18,32,0.58)", lineHeight: 1.75 }}>{s.content}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 会员 + 客服（最下面） */}
+        <div className="mobile-bottom">
+          <div className="mobile-card">
+            <div style={{ fontSize: 15, fontWeight: 900, marginBottom: 8 }}>✨ 关于会员</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginBottom: 16 }}>
               免费片段随便看，会员解锁全站所有内容。支持支付宝购买，有月卡、季卡、年卡和永久卡可以选。
             </div>
             <a href="/buy" style={{
-              display: "block", textAlign: "center", padding: "11px 0",
+              display: "block", textAlign: "center", padding: "12px 0",
               borderRadius: 999, background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
               color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 800,
               boxShadow: "0 6px 16px rgba(99,102,241,0.35)",
             }}>立即开通会员 →</a>
           </div>
 
-          {/* 客服 */}
-          <div style={{
-            background: "rgba(255,255,255,0.08)", borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.12)", padding: "16px 18px",
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 6 }}>💬 联系客服</div>
+          <div className="mobile-card" style={{ marginBottom: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 900, marginBottom: 8 }}>💬 联系客服</div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginBottom: 14 }}>
               购买咨询、使用问题、对网站的任何建议都可以加微信联系我们。
             </div>
-            <div style={{ borderRadius: 10, overflow: "hidden", maxWidth: 160, marginBottom: 8 }}>
-              <img src={WECHAT_QR_URL} alt="微信客服" style={{ width: "100%", display: "block" }} />
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-              微信号：<span style={{ fontWeight: 700, color: "#fff" }}>{WECHAT_ID}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ borderRadius: 10, overflow: "hidden", width: 100, flexShrink: 0 }}>
+                <img src={WECHAT_QR_URL} alt="微信客服" style={{ width: "100%", display: "block" }} />
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+                扫码或搜索微信号<br />
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{WECHAT_ID}</span>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 右栏：功能 + 学习步骤 */}
-        <div className="guide-right">
+      {/* ══════════════ 电脑端 ══════════════ */}
+      <div className="guide-desktop">
+
+        {/* Hero 横幅 */}
+        <div className="desktop-hero">
+          <div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 16 }}>DRAMA SCENE LIBRARY · 使用指南</div>
+            <h1 className="desktop-hero-title">
+              怎么用这个网站<br />学英语
+            </h1>
+            <p className="desktop-hero-sub">
+              精选来自美剧、电影、动画的真实英语片段，覆盖日常生活、职场、旅行、人文等实用场景，90% 来自英语核心圈母语演员的真实对话。
+            </p>
+          </div>
+          <div className="desktop-hero-actions">
+            <a href="/buy" style={{
+              display: "block", textAlign: "center", padding: "14px 0",
+              borderRadius: 999, background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+              color: "#fff", textDecoration: "none", fontSize: 15, fontWeight: 800,
+              boxShadow: "0 8px 24px rgba(99,102,241,0.4)", whiteSpace: "nowrap",
+            }}>✨ 立即开通会员</a>
+            <a href="/" style={{
+              display: "block", textAlign: "center", padding: "13px 0",
+              borderRadius: 999, background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              color: "#fff", textDecoration: "none", fontSize: 15, fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}>← 回到首页</a>
+          </div>
+        </div>
+
+        {/* 主内容 */}
+        <div className="desktop-body">
 
           {/* 功能介绍 */}
-          <div style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: "#0b1220", margin: "0 0 14px" }}>🛠️ 这里有什么</h2>
-            <div className="feature-grid">
-              {FEATURES.map((f, i) => (
-                <div key={i} style={{
-                  background: "#fff", borderRadius: 12,
-                  border: "1px solid rgba(11,18,32,0.07)",
-                  padding: "12px 14px",
-                  display: "flex", gap: 10, alignItems: "flex-start",
-                }}>
-                  <div style={{ fontSize: 20, flexShrink: 0 }}>{f.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#0b1220", marginBottom: 2 }}>{f.title}</div>
-                    <div style={{ fontSize: 12, color: "rgba(11,18,32,0.55)", lineHeight: 1.65 }}>{f.desc}</div>
-                  </div>
+          <h2 className="desktop-section-title">🛠️ 这里有什么</h2>
+          <div className="desktop-feature-grid">
+            {FEATURES.map((f, i) => (
+              <div key={i} className="desktop-feature-card">
+                <div className="desktop-feature-icon">{f.icon}</div>
+                <div>
+                  <div className="desktop-feature-name">{f.title}</div>
+                  <div className="desktop-feature-desc">{f.desc}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* 学习步骤 */}
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 900, color: "#0b1220", margin: "0 0 14px" }}>📋 完整学习步骤</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {STEPS.map((s, i) => (
-                <div key={i} style={{
-                  background: "#fff", borderRadius: 12,
-                  border: "1px solid rgba(11,18,32,0.07)",
-                  padding: "14px 16px",
-                  display: "flex", gap: 12, alignItems: "flex-start",
-                }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(124,58,237,0.08))",
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
-                  }}>{s.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 900, color: "#6366f1", marginBottom: 2, letterSpacing: "0.06em" }}>STEP {s.num}</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#0b1220", marginBottom: 4 }}>{s.title}</div>
-                    <div style={{ fontSize: 13, color: "rgba(11,18,32,0.58)", lineHeight: 1.75 }}>{s.content}</div>
-                  </div>
+          <h2 className="desktop-section-title">📋 完整学习步骤</h2>
+          <div className="desktop-steps-grid">
+            {STEPS.map((s, i) => (
+              <div key={i} className="desktop-step-card">
+                <div className="desktop-step-icon-wrap">{s.icon}</div>
+                <div>
+                  <div className="desktop-step-num">STEP {s.num}</div>
+                  <div className="desktop-step-title">{s.title}</div>
+                  <div className="desktop-step-content">{s.content}</div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+
+          {/* 会员 + 客服 */}
+          <div className="desktop-bottom">
+            <div className="desktop-bottom-card">
+              <div className="desktop-bottom-title">✨ 关于会员</div>
+              <div className="desktop-bottom-desc">
+                免费片段随便看，会员解锁全站所有内容。支持支付宝购买，有月卡、季卡、年卡和永久卡可以选。
+              </div>
+              <a href="/buy" style={{
+                display: "block", textAlign: "center", padding: "13px 0",
+                borderRadius: 999, background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                color: "#fff", textDecoration: "none", fontSize: 15, fontWeight: 800,
+                boxShadow: "0 6px 20px rgba(99,102,241,0.4)",
+              }}>立即开通会员 →</a>
+            </div>
+
+            <div className="desktop-bottom-card">
+              <div className="desktop-bottom-title">💬 联系客服</div>
+              <div className="desktop-bottom-desc">
+                购买咨询、使用问题、对网站的任何建议都可以加微信联系我们。
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <div style={{ borderRadius: 12, overflow: "hidden", width: 110, flexShrink: 0 }}>
+                  <img src={WECHAT_QR_URL} alt="微信客服" style={{ width: "100%", display: "block" }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.62)", marginBottom: 6 }}>扫码或搜索微信号</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#fff" }}>{WECHAT_ID}</div>
+                </div>
+              </div>
             </div>
           </div>
 
