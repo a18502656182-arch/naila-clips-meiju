@@ -25,6 +25,8 @@ export default function FeaturedExamples({ featured }) {
         .featCard {
           display: flex;
           flex-direction: column;
+          width: 100%;
+          align-self: stretch;
           border-radius: ${THEME.radii.lg}px;
           border: 1px solid ${THEME.colors.border};
           background: ${THEME.colors.surface};
@@ -65,6 +67,7 @@ export default function FeaturedExamples({ featured }) {
         }
       `}</style>
 
+      <div style={{ width: "100%", minWidth: 0 }}>
       <Link href={`/clips/${featured.id}`} className="featCard">
 
         {/* 封面图区域 */}
@@ -133,6 +136,7 @@ export default function FeaturedExamples({ featured }) {
         </div>
 
       </Link>
+      </div>
     </>
   );
 }
