@@ -19,7 +19,7 @@ const PLANS = [
     label: "季卡",
     days: "90天",
     daysNum: 90,
-    price: "23.80",
+    price: "29.80",
     desc: "最划算的短期选择",
     hot: true,
   },
@@ -166,13 +166,14 @@ export default function BuyPage() {
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     {p.daysNum ? (
                       <>
-                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 1 }}>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 2 }}>
                           <span style={{ fontSize: 11, color: isSelected ? C.accent : C.muted }}>¥</span>
                           <span style={{ fontSize: 26, fontWeight: 900, color: isSelected ? C.accent : C.ink, lineHeight: 1 }}>
                             {(Math.floor(Number(p.price) / p.daysNum * 100) / 100).toFixed(2)}
                           </span>
+                          <span style={{ fontSize: 12, color: isSelected ? C.accent : C.muted, fontWeight: 700 }}>/ 天</span>
                         </div>
-                        <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>/ 天 · 共¥{p.price}</div>
+                        <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>共¥{p.price}</div>
                       </>
                     ) : (
                       <>
