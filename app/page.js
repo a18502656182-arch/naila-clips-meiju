@@ -1,6 +1,7 @@
 // app/page.js
 import { createClient } from "@supabase/supabase-js";
 import { Suspense } from "react";
+import { proxyCoverUrl } from "../lib/imageUrl.js";
 
 import HomeClient from "./components/HomeClient";
 import UserMenuClient from "./components/UserMenuClient";
@@ -30,7 +31,7 @@ function normRow(r) {
     created_at: r.created_at,
     upload_time: r.upload_time ?? null,
     access_tier: r.access_tier,
-    cover_url: r.cover_url ?? null,
+    cover_url: proxyCoverUrl(r.cover_url) ?? null,
     video_url: r.video_url ?? null,
     difficulty: typeof r.difficulty_slug === "string" ? r.difficulty_slug : null,
     // topic_slugs 存 genre + duration 标签
