@@ -508,20 +508,93 @@ function VocabCard({ v, kind, showZh, segments, onLocate, favSet, onToggleFav })
 }
 
 // 点击高亮词弹出的迷你词汇卡
-function TermPopup({ popup, onClose }) {
-  if (!popup) return null;
-  const { term, v, kind, x, y, lookupData, lookupLoading, lookupError } = popup;
-  const safeX = typeof window !== "undefined" ? Math.min(x, window.innerWidth - 250) : x;
-  const safeY = typeof window !== "undefined" ? Math.min(y, window.innerHeight - 180) : y;
-
-  // vocab 有数据优先用 vocab，否则用查词结果
+function TermPopupContent({ term, v, lookupData, lookupLoading, lookupError, onClose }) {
   const ipa = v?.ipa || lookupData?.phonetic || "";
   const partOfSpeech = lookupData?.partOfSpeech || "";
   const zhMeaning = v?.meaning_zh || lookupData?.zh || "";
   const audioUrl = v?.audio_url || lookupData?.audio || "";
   const exampleEn = v?.example_en || "";
   const exampleZh = v?.example_zh || "";
+  return (
+    <>
+      <div style={{ fontWeight: 900, fontSize: 18, marginBottom: 4, color: "#0b1220" }}>{term}</div>
+      {lookupLoading && <div style={{ fontSize: 13, color: "#94a3b8", padding: "6px 0" }}>查询中...</div>}
+      {lookupError && !v && <div style={{ fontSize: 12, color: "#ef4444", padding: "4px 0" }}>暂无数据</div>}
+      {!lookupLoading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {(ipa || partOfSpeech) && (
+            <div style={{ fontSize: 13, color: "#94a3b8" }}>
+              {ipa ? `/ ${ipa} / ` : ""}{partOfSpeech ? <span style={{ fontStyle: "italic" }}>{partOfSpeech}</span> : null}
+            </div>
+          )}
+          {zhMeaning && (
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{zhMeaning}</div>
+          )}
+          {(exampleEn || exampleZh) && (
+            <div style={{ padding: "8px 12px", background: "#f3fbff", borderRadius: 10, border: "1px solid #cfe6ff", lineHeight: 1.6 }}>
+              {exampleEn && <div style={{ fontSize: 13, color: "#0b5aa6", fontWeight: 600 }}>{exampleEn}</div>}
+              {exampleZh && <div style={{ fontSize: 13, color: "#64748b", marginTop: 3 }}>{exampleZh}</div>}
+            </div>
+          )}
+          <button
+            onClick={() => { if (audioUrl) { new Audio(audioUrl).play().catch(() => speakEn(term)); } else { speakEn(term); } }}
+            style={{ marginTop: 2, border: "1px solid #e2e8f0", background: "transparent", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, color: "#64748b", alignSelf: "flex-start" }}
+          >🔊 发音</button>
+        </div>
+      )}
+    </>
+  );
+}
 
+function TermPopup({ popup, onClose, isMobile, activeSeg }) {
+  if (!popup) return null;
+  const { term, v, kind, x, y, lookupData, lookupLoading, lookupError } = popup;
+
+  // 手机端：底部大面板
+  if (isMobile) {
+    return (
+      <>
+        <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(11,18,32,0.3)" }} />
+        <div style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9999,
+          background: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20,
+          boxShadow: "0 -8px 40px rgba(11,18,32,0.18)",
+          animation: "bIn 200ms cubic-bezier(.2,.9,.2,1)",
+          overflow: "hidden",
+        }}>
+          {/* 把手 */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
+            <div style={{ width: 36, height: 4, borderRadius: 999, background: "rgba(11,18,32,0.12)" }} />
+          </div>
+          {/* 当前字幕 */}
+          {activeSeg && (
+            <div style={{ padding: "10px 16px 10px", borderBottom: "1px solid rgba(99,102,241,0.1)", background: "rgba(99,102,241,0.04)" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#0b1220", lineHeight: 1.6 }}>
+                {activeSeg.en || ""}
+              </div>
+              {activeSeg.zh && (
+                <div style={{ fontSize: 13, color: "#64748b", marginTop: 3, lineHeight: 1.5 }}>
+                  {activeSeg.zh}
+                </div>
+              )}
+            </div>
+          )}
+          {/* 词汇卡内容 */}
+          <div style={{ padding: "14px 16px 32px" }}>
+            <TermPopupContent
+              term={term} v={v} lookupData={lookupData}
+              lookupLoading={lookupLoading} lookupError={lookupError}
+              onClose={onClose}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // 电脑端：原来的小浮窗
+  const safeX = typeof window !== "undefined" ? Math.min(x, window.innerWidth - 250) : x;
+  const safeY = typeof window !== "undefined" ? Math.min(y, window.innerHeight - 180) : y;
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9998 }} />
@@ -533,31 +606,11 @@ function TermPopup({ popup, onClose }) {
         animation: "bIn 200ms cubic-bezier(.2,.9,.2,1)",
       }}>
         <button onClick={onClose} style={{ position: "absolute", top: 8, right: 8, width: 20, height: 20, borderRadius: "50%", border: "none", background: "rgba(11,18,32,0.07)", cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>✕</button>
-        <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 4 }}>{term}</div>
-        {lookupLoading && <div style={{ fontSize: 13, color: "#94a3b8", padding: "6px 0" }}>查询中...</div>}
-        {lookupError && !v && <div style={{ fontSize: 12, color: "#ef4444", padding: "4px 0" }}>暂无数据</div>}
-        {!lookupLoading && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {(ipa || partOfSpeech) && (
-              <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                {ipa ? `/ ${ipa} / ` : ""}{partOfSpeech ? <span style={{ fontStyle: "italic" }}>{partOfSpeech}</span> : null}
-              </div>
-            )}
-            {zhMeaning && (
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{zhMeaning}</div>
-            )}
-            {(exampleEn || exampleZh) && (
-              <div style={{ marginTop: 6, padding: "7px 10px", background: "#f3fbff", borderRadius: 10, border: "1px solid #cfe6ff", lineHeight: 1.55 }}>
-                {exampleEn && <div style={{ fontSize: 12, color: "#0b5aa6", fontWeight: 600 }}>{exampleEn}</div>}
-                {exampleZh && <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{exampleZh}</div>}
-              </div>
-            )}
-            <button
-              onClick={() => { if (audioUrl) { new Audio(audioUrl).play().catch(() => speakEn(term)); } else { speakEn(term); } }}
-              style={{ marginTop: 4, border: "1px solid #e2e8f0", background: "transparent", borderRadius: 8, padding: "4px 10px", cursor: "pointer", fontSize: 12, color: "#64748b", alignSelf: "flex-start" }}
-            >🔊 发音</button>
-          </div>
-        )}
+        <TermPopupContent
+          term={term} v={v} lookupData={lookupData}
+          lookupLoading={lookupLoading} lookupError={lookupError}
+          onClose={onClose}
+        />
       </div>
     </>
   );
@@ -1570,7 +1623,7 @@ export default function ClipDetailClient({ clipId, initialItem, initialMe, initi
         <style>{`@keyframes skPulse { 0%,100%{opacity:1} 50%{opacity:0.45} } @keyframes bIn { 0%{opacity:0;transform:translateY(6px) scale(0.96)} 100%{opacity:1;transform:translateY(0) scale(1)} }`}</style>
         {navBar}
         {showBookmarkLoginModal && <BookmarkLoginModal onClose={() => setShowBookmarkLoginModal(false)} />}
-        <TermPopup popup={termPopup} onClose={() => setTermPopup(null)} />
+        <TermPopup popup={termPopup} onClose={() => setTermPopup(null)} isMobile={true} activeSeg={activeSegIdx >= 0 ? segments[activeSegIdx] : null} />
         {/* 视频区：去掉Card和padding，完全填满宽度 */}
         <div style={{ position: "sticky", top: 52, zIndex: 10, background: "#1a1a2e" }}>
           {videoOrGate("38vh", true)}
