@@ -546,53 +546,9 @@ function TermPopupContent({ term, v, lookupData, lookupLoading, lookupError, onC
   );
 }
 
-function TermPopup({ popup, onClose, isMobile, activeSeg }) {
+function TermPopup({ popup, onClose }) {
   if (!popup) return null;
   const { term, v, kind, x, y, lookupData, lookupLoading, lookupError } = popup;
-
-  // 手机端：底部大面板
-  if (isMobile) {
-    return (
-      <>
-        <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(11,18,32,0.3)" }} />
-        <div style={{
-          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 9999,
-          background: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20,
-          boxShadow: "0 -8px 40px rgba(11,18,32,0.18)",
-          animation: "bIn 200ms cubic-bezier(.2,.9,.2,1)",
-          overflow: "hidden",
-        }}>
-          {/* 把手 */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
-            <div style={{ width: 36, height: 4, borderRadius: 999, background: "rgba(11,18,32,0.12)" }} />
-          </div>
-          {/* 当前字幕 */}
-          {activeSeg && (
-            <div style={{ padding: "10px 16px 10px", borderBottom: "1px solid rgba(99,102,241,0.1)", background: "rgba(99,102,241,0.04)" }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#0b1220", lineHeight: 1.6 }}>
-                {activeSeg.en || ""}
-              </div>
-              {activeSeg.zh && (
-                <div style={{ fontSize: 13, color: "#64748b", marginTop: 3, lineHeight: 1.5 }}>
-                  {activeSeg.zh}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 词汇卡内容 */}
-          <div style={{ padding: "14px 16px 32px" }}>
-            <TermPopupContent
-              term={term} v={v} lookupData={lookupData}
-              lookupLoading={lookupLoading} lookupError={lookupError}
-              onClose={onClose}
-            />
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // 电脑端：原来的小浮窗
   const safeX = typeof window !== "undefined" ? Math.min(x, window.innerWidth - 250) : x;
   const safeY = typeof window !== "undefined" ? Math.min(y, window.innerHeight - 180) : y;
   return (
@@ -1623,7 +1579,7 @@ export default function ClipDetailClient({ clipId, initialItem, initialMe, initi
         <style>{`@keyframes skPulse { 0%,100%{opacity:1} 50%{opacity:0.45} } @keyframes bIn { 0%{opacity:0;transform:translateY(6px) scale(0.96)} 100%{opacity:1;transform:translateY(0) scale(1)} }`}</style>
         {navBar}
         {showBookmarkLoginModal && <BookmarkLoginModal onClose={() => setShowBookmarkLoginModal(false)} />}
-        <TermPopup popup={termPopup} onClose={() => setTermPopup(null)} isMobile={true} activeSeg={activeSegIdx >= 0 ? segments[activeSegIdx] : null} />
+        <TermPopup popup={termPopup} onClose={() => setTermPopup(null)} />
         {/* 视频区：去掉Card和padding，完全填满宽度 */}
         <div style={{ position: "sticky", top: 52, zIndex: 10, background: "#1a1a2e" }}>
           {videoOrGate("38vh", true)}
@@ -1701,16 +1657,33 @@ export default function ClipDetailClient({ clipId, initialItem, initialMe, initi
         )}
 
         {vocabOpen && (
-          <div role="dialog" aria-modal="true" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50, height: "46vh" }} onClick={() => setVocabOpen(false)}>
-            <div style={{ width: "100%", height: "100%", background: THEME.colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, border: `1px solid ${THEME.colors.border}`, boxShadow: "0 -20px 50px rgba(0,0,0,0.12)", padding: "12px 14px", overflow: "hidden", boxSizing: "border-box" }} onClick={e => e.stopPropagation()}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div role="dialog" aria-modal="true" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50, top: "calc(38vh + 52px)" }} onClick={() => setVocabOpen(false)}>
+            <div style={{ width: "100%", height: "100%", background: THEME.colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, border: `1px solid ${THEME.colors.border}`, boxShadow: "0 -20px 50px rgba(0,0,0,0.12)", overflow: "hidden", boxSizing: "border-box", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+              {/* 当前字幕：实时跟随视频播放 */}
+              {activeSegIdx >= 0 && segments[activeSegIdx] && (
+                <div style={{ padding: "10px 14px", borderBottom: `1px solid rgba(99,102,241,0.1)`, background: "rgba(99,102,241,0.04)", flexShrink: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: THEME.colors.ink, lineHeight: 1.6 }}>
+                    {segments[activeSegIdx].en || ""}
+                  </div>
+                  {segments[activeSegIdx].zh && (
+                    <div style={{ fontSize: 13, color: THEME.colors.muted, marginTop: 2, lineHeight: 1.5 }}>
+                      {segments[activeSegIdx].zh}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* 词汇卡标题栏 */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 6px", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 3, height: 16, borderRadius: 999, background: THEME.colors.accent }} />
                   <span style={{ fontWeight: 900, fontSize: 15, color: THEME.colors.ink, letterSpacing: "-0.01em" }}>词汇卡</span>
                 </div>
                 <button type="button" onClick={() => setVocabOpen(false)} style={{ width: 26, height: 26, borderRadius: "50%", border: "none", background: "rgba(11,18,32,0.07)", cursor: "pointer", fontSize: 13, color: THEME.colors.faint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
               </div>
-              {vocabPanel("calc(46vh - 76px)", true)}
+              {/* 词汇卡内容 */}
+              <div style={{ flex: 1, overflow: "hidden", padding: "0 14px 14px" }}>
+                {vocabPanel("100%", true)}
+              </div>
             </div>
           </div>
         )}
