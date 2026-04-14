@@ -517,7 +517,7 @@ function TermPopupContent({ term, v, lookupData, lookupLoading, lookupError, onC
   const exampleZh = v?.example_zh || "";
   return (
     <>
-      <div style={{ fontWeight: 900, fontSize: 18, marginBottom: 4, color: "#0b1220" }}>{term}</div>
+      <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 4, color: "#0b1220" }}>{term}</div>
       {lookupLoading && <div style={{ fontSize: 13, color: "#94a3b8", padding: "6px 0" }}>查询中...</div>}
       {lookupError && !v && <div style={{ fontSize: 12, color: "#ef4444", padding: "4px 0" }}>暂无数据</div>}
       {!lookupLoading && (
@@ -528,7 +528,7 @@ function TermPopupContent({ term, v, lookupData, lookupLoading, lookupError, onC
             </div>
           )}
           {zhMeaning && (
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{zhMeaning}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>{zhMeaning}</div>
           )}
           {(exampleEn || exampleZh) && (
             <div style={{ padding: "8px 12px", background: "#f3fbff", borderRadius: 10, border: "1px solid #cfe6ff", lineHeight: 1.6 }}>
@@ -538,7 +538,7 @@ function TermPopupContent({ term, v, lookupData, lookupLoading, lookupError, onC
           )}
           <button
             onClick={() => { if (audioUrl) { new Audio(audioUrl).play().catch(() => speakEn(term)); } else { speakEn(term); } }}
-            style={{ marginTop: 2, border: "1px solid #e2e8f0", background: "transparent", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, color: "#64748b", alignSelf: "flex-start" }}
+            style={{ marginTop: 4, border: "1px solid #e2e8f0", background: "transparent", borderRadius: 8, padding: "4px 10px", cursor: "pointer", fontSize: 12, color: "#64748b", alignSelf: "flex-start" }}
           >🔊 发音</button>
         </div>
       )}
@@ -1657,7 +1657,7 @@ export default function ClipDetailClient({ clipId, initialItem, initialMe, initi
         )}
 
         {vocabOpen && (
-          <div role="dialog" aria-modal="true" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50, top: "calc(38vh + 52px)" }} onClick={() => setVocabOpen(false)}>
+          <div role="dialog" aria-modal="true" style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50, top: "calc(38vh + 52px + 45px)" }} onClick={() => setVocabOpen(false)}>
             <div style={{ width: "100%", height: "100%", background: THEME.colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, border: `1px solid ${THEME.colors.border}`, boxShadow: "0 -20px 50px rgba(0,0,0,0.12)", overflow: "hidden", boxSizing: "border-box", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
               {/* 当前字幕：实时跟随视频播放 */}
               {activeSegIdx >= 0 && segments[activeSegIdx] && (
