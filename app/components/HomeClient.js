@@ -61,20 +61,22 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     } catch {}
   }, [filters]);
 
-  // 离开时保存滚动位置
+  // 离开时保存滚动位置：监听所有链接点击，在跳转前瞬间保存
   useEffect(() => {
     function saveScroll() {
       try {
         sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
       } catch {}
     }
+    function onLinkClick(e) {
+      const a = e.target.closest("a[href]");
+      if (a) saveScroll();
+    }
+    document.addEventListener("click", onLinkClick, true);
     window.addEventListener("beforeunload", saveScroll);
-    // Next.js 客户端路由跳转时 beforeunload 不触发，用 pagehide 补充
-    window.addEventListener("pagehide", saveScroll);
     return () => {
-      saveScroll(); // 组件卸载时（路由跳转）也保存
+      document.removeEventListener("click", onLinkClick, true);
       window.removeEventListener("beforeunload", saveScroll);
-      window.removeEventListener("pagehide", saveScroll);
     };
   }, []);
 
