@@ -53,7 +53,10 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
         if (maxScroll >= top || attempts >= 10) {
           isRestoring.current = true;
           window.scrollTo({ top, behavior: "instant" });
-          setTimeout(() => { isRestoring.current = false; }, 500);
+          setTimeout(() => {
+            isRestoring.current = false;
+            window.dispatchEvent(new Event("scroll_restored"));
+          }, 500);
         } else {
           setTimeout(tryScroll, 100);
         }
