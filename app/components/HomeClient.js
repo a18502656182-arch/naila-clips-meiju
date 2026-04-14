@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import FiltersClient from "./FiltersClient";
 import ClipsGridClient from "./ClipsGridClient";
 
+const SCROLL_KEY = "meiju_home_scroll_v1";
 const BANNER_KEY = "meiju_free_banner_closed_v1";
 const FILTERS_KEY = "meiju_home_filters_v1";
-const SCROLL_KEY = "meiju_home_scroll_v1";
 
 const DEFAULT_FILTERS = {
   sort: "newest",
@@ -37,7 +37,19 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     } catch {}
   }, []);
 
-  // 恢复滚动位置
+  // 让浏览器自动记住并恢复滚动位置
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.history.scrollRestoration = "auto";
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
+
+  // 恢复滚动位置（等visibleCount恢复后页面高度足够再滚）
   useEffect(() => {
     if (scrollRestored.current) return;
     scrollRestored.current = true;
@@ -50,13 +62,10 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
       function tryScroll() {
         attempts++;
         const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        if (maxScroll >= top || attempts >= 10) {
+        if (maxScroll >= top || attempts >= 20) {
           isRestoring.current = true;
           window.scrollTo({ top, behavior: "instant" });
-          setTimeout(() => {
-            isRestoring.current = false;
-            window.dispatchEvent(new Event("scroll_restored"));
-          }, 500);
+          setTimeout(() => { isRestoring.current = false; }, 500);
         } else {
           setTimeout(tryScroll, 100);
         }
@@ -65,21 +74,12 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     } catch {}
   }, []);
 
-  // 保存筛选状态
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
-    } catch {}
-  }, [filters]);
-
-  // 持续保存滚动位置（防抖200ms，恢复期间不保存）
+  // 保存滚动位置
   useEffect(() => {
     let timer = null;
     function saveScroll() {
       if (isRestoring.current) return;
-      try {
-        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-      } catch {}
+      try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch {}
     }
     function onScroll() {
       clearTimeout(timer);
@@ -93,6 +93,15 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
       window.removeEventListener("beforeunload", saveScroll);
     };
   }, []);
+
+
+  // 保存筛选状态
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
+    } catch {}
+  }, [filters]);
+
 
   function closeBanner() {
     try { localStorage.setItem(BANNER_KEY, "1"); } catch {}
