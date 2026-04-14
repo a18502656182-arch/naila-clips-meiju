@@ -61,24 +61,28 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     } catch {}
   }, [filters]);
 
-  // 离开时保存滚动位置：监听所有链接点击，在跳转前瞬间保存
+  // 点击链接时保存当前滚动位置（用ref实时跟踪，避免点击时scrollY已归零）
   useEffect(() => {
-    function saveScroll() {
-      try {
-        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
-      } catch {}
+    const scrollRef = { current: 0 };
+    function onScroll() {
+      scrollRef.current = window.scrollY;
     }
     function onLinkClick(e) {
       const a = e.target.closest("a[href]");
-      if (a) saveScroll();
+      if (a) {
+        try {
+          sessionStorage.setItem(SCROLL_KEY, String(scrollRef.current));
+        } catch {}
+      }
     }
+    window.addEventListener("scroll", onScroll, { passive: true });
     document.addEventListener("click", onLinkClick, true);
-    window.addEventListener("beforeunload", saveScroll);
     return () => {
+      window.removeEventListener("scroll", onScroll);
       document.removeEventListener("click", onLinkClick, true);
-      window.removeEventListener("beforeunload", saveScroll);
     };
   }, []);
+  }, []);  }, []);
 
   function closeBanner() {
     try { localStorage.setItem(BANNER_KEY, "1"); } catch {}
