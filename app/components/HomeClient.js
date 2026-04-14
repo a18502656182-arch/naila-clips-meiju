@@ -29,6 +29,7 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
   const [showBanner, setShowBanner] = useState(false);
   const containerRef = useRef(null);
   const scrollRestored = useRef(false);
+  const isRestoring = useRef(false);
 
   useEffect(() => {
     try {
@@ -42,15 +43,22 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     scrollRestored.current = true;
     try {
       const saved = sessionStorage.getItem(SCROLL_KEY);
-      if (saved) {
-        const top = parseInt(saved, 10);
-        // 等 DOM 渲染完成再滚动
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top, behavior: "instant" });
-          });
-        });
+      if (!saved) return;
+      const top = parseInt(saved, 10);
+      if (!top) return;
+      let attempts = 0;
+      function tryScroll() {
+        attempts++;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (maxScroll >= top || attempts >= 10) {
+          isRestoring.current = true;
+          window.scrollTo({ top, behavior: "instant" });
+          setTimeout(() => { isRestoring.current = false; }, 500);
+        } else {
+          setTimeout(tryScroll, 100);
+        }
       }
+      setTimeout(tryScroll, 100);
     } catch {}
   }, []);
 
@@ -61,10 +69,11 @@ export default function HomeClient({ allItems, initialTaxonomies }) {
     } catch {}
   }, [filters]);
 
-  // 持续保存滚动位置（防抖200ms）
+  // 持续保存滚动位置（防抖200ms，恢复期间不保存）
   useEffect(() => {
     let timer = null;
     function saveScroll() {
+      if (isRestoring.current) return;
       try {
         sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
       } catch {}
