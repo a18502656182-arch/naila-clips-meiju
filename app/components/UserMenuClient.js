@@ -185,9 +185,13 @@ export default function UserMenuClient() {
     );
   }
 
-  const [darkMode, setDarkMode] = useState(() => {
-    try { return localStorage.getItem("dark_mode") === "1"; } catch { return false; }
-  });
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      setDarkMode(localStorage.getItem("dark_mode") === "1");
+    } catch {}
+  }, []);
 
   function toggleDark() {
     const next = !darkMode;
