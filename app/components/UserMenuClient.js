@@ -36,6 +36,27 @@ export default function UserMenuClient() {
   const [meData, setMeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      setDarkMode(localStorage.getItem("dark_mode") === "1");
+    } catch {}
+  }, []);
+
+  function toggleDark() {
+    const next = !darkMode;
+    setDarkMode(next);
+    try {
+      if (next) {
+        document.body.classList.add("dark-mode");
+        localStorage.setItem("dark_mode", "1");
+      } else {
+        document.body.classList.remove("dark-mode");
+        localStorage.removeItem("dark_mode");
+      }
+    } catch {}
+  }
   const wrapRef = useRef(null);
   const router = useRouter();
 
@@ -183,28 +204,6 @@ export default function UserMenuClient() {
         </div>
       </div>
     );
-  }
-
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    try {
-      setDarkMode(localStorage.getItem("dark_mode") === "1");
-    } catch {}
-  }, []);
-
-  function toggleDark() {
-    const next = !darkMode;
-    setDarkMode(next);
-    try {
-      if (next) {
-        document.body.classList.add("dark-mode");
-        localStorage.setItem("dark_mode", "1");
-      } else {
-        document.body.classList.remove("dark-mode");
-        localStorage.removeItem("dark_mode");
-      }
-    } catch {}
   }
 
   const displayName = meData?.username || (email || "U").split("@")[0];
