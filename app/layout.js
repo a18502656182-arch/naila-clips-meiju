@@ -35,6 +35,7 @@ export default function RootLayout({ children }) {
         `}</style>
       </head>
       <body style={{ margin: 0 }} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('dark_mode')==='1')document.body.classList.add('dark-mode')}catch(e){}` }} />
         {children}
         <PenguinWrapper />
         <BuyFloatBtn />
