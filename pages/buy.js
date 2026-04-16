@@ -9,6 +9,7 @@ const PLANS = [
     id: "month",
     label: "月卡",
     days: "30天",
+    daysNum: 30,
     price: "13.80",
     desc: "适合先体验一个月",
     hot: false,
@@ -17,7 +18,8 @@ const PLANS = [
     id: "quarter",
     label: "季卡",
     days: "90天",
-    price: "23.80",
+    daysNum: 90,
+    price: "29.80",
     desc: "最划算的短期选择",
     hot: true,
   },
@@ -25,6 +27,7 @@ const PLANS = [
     id: "year",
     label: "年卡",
     days: "365天",
+    daysNum: 365,
     price: "66.80",
     desc: "深度学习推荐",
     hot: false,
@@ -33,6 +36,7 @@ const PLANS = [
     id: "lifetime",
     label: "永久卡",
     days: "永久有效",
+    daysNum: null,
     price: "168.80",
     desc: "一次买断，终身使用",
     hot: false,
@@ -160,13 +164,31 @@ export default function BuyPage() {
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, color: C.muted }}>¥</span>
-                    <span style={{ fontSize: 22, fontWeight: 900, color: isSelected ? C.accent : C.ink }}>
-                      {p.price.split(".")[0]}
-                    </span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: isSelected ? C.accent : C.ink }}>
-                      .{p.price.split(".")[1]}
-                    </span>
+                    {p.daysNum ? (
+                      <>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 2 }}>
+                          <span style={{ fontSize: 11, color: isSelected ? C.accent : C.muted }}>¥</span>
+                          <span style={{ fontSize: 26, fontWeight: 900, color: isSelected ? C.accent : C.ink, lineHeight: 1 }}>
+                            {(Math.floor(Number(p.price) / p.daysNum * 100) / 100).toFixed(2)}
+                          </span>
+                          <span style={{ fontSize: 12, color: isSelected ? C.accent : C.muted, fontWeight: 700 }}>/ 天</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>共¥{p.price}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 1 }}>
+                          <span style={{ fontSize: 11, color: isSelected ? C.accent : C.muted }}>¥</span>
+                          <span style={{ fontSize: 26, fontWeight: 900, color: isSelected ? C.accent : C.ink, lineHeight: 1 }}>
+                            {p.price.split(".")[0]}
+                          </span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: isSelected ? C.accent : C.ink }}>
+                            .{p.price.split(".")[1]}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>一次买断</div>
+                      </>
+                    )}
                   </div>
                 </div>
               );

@@ -77,7 +77,8 @@ function planLabel(days) {
   if (days === 0 || days === null || days === undefined) return "永久卡";
   if (days >= 365) return "年卡";
   if (days >= 90) return "季卡";
-  return "月卡";
+  if (days >= 30) return "月卡";
+  return `试用卡(${days}天)`;
 }
 function copyText(text) {
   navigator.clipboard?.writeText(text).catch(() => {});
@@ -1043,6 +1044,7 @@ function CodesPanel({ initialCodes, onToast }) {
   const [search, setSearch] = useState("");
 
   const planOptions = [
+    { value: "trial", label: "试用卡 (自定义天数)", days: "3" },
     { value: "month", label: "月卡 (30天)", days: "30" },
     { value: "quarter", label: "季卡 (90天)", days: "90" },
     { value: "year", label: "年卡 (365天)", days: "365" },
@@ -1054,7 +1056,8 @@ function CodesPanel({ initialCodes, onToast }) {
     if (filter === "active" && !(c.is_active && !used)) return false;
     if (filter === "used" && !used) return false;
     if (filter === "inactive" && c.is_active) return false;
-    if (planFilter === "month" && !(c.days > 0 && c.days < 90)) return false;
+    if (planFilter === "trial" && !(c.days > 0 && c.days < 30)) return false;
+    if (planFilter === "month" && !(c.days >= 30 && c.days < 90)) return false;
     if (planFilter === "quarter" && !(c.days >= 90 && c.days < 365)) return false;
     if (planFilter === "year" && !(c.days >= 365)) return false;
     if (planFilter === "lifetime" && c.days !== 0) return false;
@@ -1063,10 +1066,17 @@ function CodesPanel({ initialCodes, onToast }) {
   });
 
   async function handleGenerate() {
+    const days = Number(genOpts.days);
+    // 试用卡：1天到29天
+    if (genOpts.plan === "trial") {
+      if (!days || days < 1 || days >= 30) {
+        onToast("试用卡天数需在 1~29 天之间", "error"); return;
+      }
+    }
     setGenerating(true);
     const res = await api("codes_generate", {
       plan: genOpts.plan,
-      days: Number(genOpts.days),
+      days: days,
       count: Number(genOpts.count),
     });
     setGenerating(false);
@@ -1130,7 +1140,7 @@ function CodesPanel({ initialCodes, onToast }) {
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        {[["all","全部卡种"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
+        {[["all","全部卡种"], ["trial","试用卡"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
           <button key={v} onClick={() => setPlanFilter(v)} style={{
             padding: "5px 14px", borderRadius: T.radius.pill, fontSize: 12, fontWeight: 700,
             cursor: "pointer", border: `1px solid ${planFilter === v ? T.vip : T.border2}`,
@@ -1139,7 +1149,7 @@ function CodesPanel({ initialCodes, onToast }) {
           }}>{l}</button>
         ))}
         <input
-          value={search} onChange={(e) => setSearch(e.target.value)}
+          className="codes-search" value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="搜索码…"
           style={{
             padding: "5px 12px", borderRadius: T.radius.pill, fontSize: 12,
@@ -1156,7 +1166,7 @@ function CodesPanel({ initialCodes, onToast }) {
           const used = c.used_count >= (c.max_uses || 1);
           const chipColor = c.days === 0 ? T.vip : c.days >= 365 ? T.vip : c.days >= 90 ? T.warn : T.accent;
           return (
-            <div key={c.code || i} style={{
+            <div key={c.code || i} className="code-row" style={{
               background: T.surface2, borderRadius: T.radius.sm,
               border: `1px solid ${T.border}`, padding: "10px 14px",
               display: "flex", alignItems: "center", gap: 12, opacity: !c.is_active ? 0.5 : 1,
@@ -1171,7 +1181,7 @@ function CodesPanel({ initialCodes, onToast }) {
                   ? <Chip color={T.good}>可用</Chip>
                   : <Chip color={T.danger}>已停用</Chip>
               }
-              <span style={{ fontSize: 11, color: T.faint }}>{fmt(c.created_at)}</span>
+              <span className="code-date" style={{ fontSize: 11, color: T.faint }}>{fmt(c.created_at)}</span>
               <Btn size="sm" variant="ghost" onClick={() => { copyText(c.code); onToast("已复制 ✓"); }}>复制</Btn>
               {c.code && !used && (
                 <Btn size="sm" variant={c.is_active ? "danger" : "success"} onClick={() => handleToggle(c)}>
@@ -1240,6 +1250,19 @@ function UsersPanel({ initialUsers, onToast }) {
   const [memberDays, setMemberDays] = useState("30");
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [detailModal, setDetailModal] = useState(null); // { user, data, loading }
+
+  async function openDetail(u) {
+    setDetailModal({ user: u, data: null, loading: true });
+    const res = await api("user_detail", { user_id: u.id });
+    if (res.ok) {
+      setDetailModal({ user: u, data: res, loading: false });
+    } else {
+      setDetailModal({ user: u, data: null, loading: false });
+      onToast("加载失败", "error");
+    }
+  }
 
   async function handleSearch(q) {
     setSearch(q);
@@ -1285,6 +1308,15 @@ function UsersPanel({ initialUsers, onToast }) {
   const filtered = users.filter((u) => {
     if (filter === "member" && !isMemberActive(u.subscription)) return false;
     if (filter === "expired" && isMemberActive(u.subscription)) return false;
+    // 卡种筛选
+    if (planFilter !== "all") {
+      const days = u.used_plan?.days;
+      if (planFilter === "trial" && !(days > 0 && days < 30)) return false;
+      if (planFilter === "month" && !(days >= 30 && days < 90)) return false;
+      if (planFilter === "quarter" && !(days >= 90 && days < 365)) return false;
+      if (planFilter === "year" && !(days >= 365)) return false;
+      if (planFilter === "lifetime" && days !== 0) return false;
+    }
     return true;
   });
 
@@ -1293,7 +1325,7 @@ function UsersPanel({ initialUsers, onToast }) {
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h2 style={{ fontSize: 18, fontWeight: 900, color: T.ink, margin: 0, flex: 1 }}>👤 用户管理</h2>
         <input
-          value={search}
+          className="users-search" value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="搜索邮箱 / 用户名…"
           style={{
@@ -1304,13 +1336,24 @@ function UsersPanel({ initialUsers, onToast }) {
         {searching && <span style={{ fontSize: 12, color: T.muted }}>搜索中…</span>}
       </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {[["all","全部"], ["member","会员中"], ["expired","已过期"]].map(([v,l]) => (
           <button key={v} onClick={() => setFilter(v)} style={{
             padding: "5px 14px", borderRadius: T.radius.pill, fontSize: 12, fontWeight: 700,
             cursor: "pointer", border: `1px solid ${filter === v ? T.accent : T.border2}`,
             background: filter === v ? `${T.accent}22` : "transparent",
             color: filter === v ? T.accent2 : T.muted,
+          }}>{l}</button>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[["all","全部卡种"], ["trial","试用卡"], ["month","月卡"], ["quarter","季卡"], ["year","年卡"], ["lifetime","永久卡"]].map(([v,l]) => (
+          <button key={v} onClick={() => setPlanFilter(v)} style={{
+            padding: "5px 14px", borderRadius: T.radius.pill, fontSize: 12, fontWeight: 700,
+            cursor: "pointer", border: `1px solid ${planFilter === v ? T.vip : T.border2}`,
+            background: planFilter === v ? `${T.vip}22` : "transparent",
+            color: planFilter === v ? T.vip : T.muted,
           }}>{l}</button>
         ))}
       </div>
@@ -1323,7 +1366,7 @@ function UsersPanel({ initialUsers, onToast }) {
           const active = isMemberActive(u.subscription);
           const expired = u.subscription && !active;
           return (
-            <div key={u.id} style={{
+            <div key={u.id} className="user-row" style={{
               background: T.surface2, borderRadius: T.radius.md,
               border: `1px solid ${T.border}`, padding: "12px 16px",
               display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
@@ -1359,16 +1402,120 @@ function UsersPanel({ initialUsers, onToast }) {
                       注册码：<code style={{ fontFamily: "monospace", color: T.muted }}>{u.used_code}</code>
                     </span>
                   )}
-                  <span style={{ fontSize: 11, color: T.faint }}>注册：{fmt(u.created_at)}</span>
+                  {u.used_plan && (() => {
+                    const { plan, days } = u.used_plan;
+                    const label = days === 0 ? "永久卡" : days >= 365 ? "年卡" : days >= 90 ? "季卡" : days >= 30 ? "月卡" : `试用卡(${days}天)`;
+                    const color = days === 0 ? T.vip : days >= 365 ? T.vip : days >= 90 ? T.warn : days >= 30 ? T.accent : T.good;
+                    return <Chip color={color}>{label}</Chip>;
+                  })()}
+                  <span style={{ fontSize: 11, color: T.faint }}>注册：{fmtFull(u.created_at)}</span>
                 </div>
               </div>
-              <Btn size="sm" variant="ghost" onClick={() => { setMemberModal(u); setMemberDays("30"); }}>
-                调整会员
-              </Btn>
+              <div className="user-row-actions" style={{ display: "flex", gap: 6 }}>
+                <Btn size="sm" variant="ghost" onClick={() => openDetail(u)}>
+                  查看详情
+                </Btn>
+                <Btn size="sm" variant="ghost" onClick={() => { setMemberModal(u); setMemberDays("30"); }}>
+                  调整会员
+                </Btn>
+              </div>
             </div>
           );
         })}
       </div>
+
+      {/* 用户详情弹窗 */}
+      <Modal open={!!detailModal} onClose={() => setDetailModal(null)} title="👤 用户详情" width={560}>
+        {detailModal && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ padding: "10px 14px", background: T.surface3, borderRadius: T.radius.md }}>
+              <div style={{ fontWeight: 800, color: T.ink }}>{detailModal.user.username || detailModal.user.email}</div>
+              <div style={{ fontSize: 12, color: T.faint, marginTop: 2 }}>ID: {detailModal.user.id?.slice(0, 16)}...</div>
+            </div>
+            {detailModal.loading && <div style={{ textAlign: "center", padding: 24, color: T.faint }}>加载中...</div>}
+            {!detailModal.loading && !detailModal.data && <div style={{ color: T.warn, fontSize: 13 }}>加载失败</div>}
+            {detailModal.data && (() => {
+              const d = detailModal.data;
+              const GAME_NAMES = { matchMadness: "配对狂热", fillBlank: "填词挑战", listenWrite: "听写练习" };
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {/* 游戏分数 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>🎮 游戏分数</div>
+                    {(!d.game_scores || d.game_scores.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无游戏记录</div>
+                    ) : (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {d.game_scores.map(g => (
+                          <div key={g.game_id} style={{ padding: "8px 14px", background: T.surface3, borderRadius: T.radius.md, minWidth: 120 }}>
+                            <div style={{ fontSize: 12, color: T.muted, marginBottom: 4 }}>{GAME_NAMES[g.game_id] || g.game_id}</div>
+                            <div style={{ fontSize: 18, fontWeight: 900, color: T.ink }}>最高 {g.best_score}</div>
+                            <div style={{ fontSize: 11, color: T.faint }}>共玩 {g.play_count} 次</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 收藏词汇 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      📚 收藏词汇（{d.vocab?.length || 0} 个）
+                    </div>
+                    {(!d.vocab || d.vocab.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无收藏词汇</div>
+                    ) : (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxHeight: 120, overflowY: "auto" }}>
+                        {d.vocab.map((v, i) => (
+                          <span key={i} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, background: T.surface3, color: T.ink, border: `1px solid ${T.border}` }}>
+                            {v.term}
+                            {v.mastery_level > 0 && <span style={{ color: T.good, marginLeft: 4 }}>{"★".repeat(Math.min(v.mastery_level, 3))}</span>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 书签 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      🔖 书签（{d.bookmarks?.length || 0} 个）
+                    </div>
+                    {(!d.bookmarks || d.bookmarks.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无书签</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 120, overflowY: "auto" }}>
+                        {d.bookmarks.map((b, i) => (
+                          <div key={i} style={{ fontSize: 12, color: T.muted, padding: "4px 8px", background: T.surface3, borderRadius: 6 }}>
+                            {b.title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* 观看记录 */}
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: T.accent2, marginBottom: 8 }}>
+                      👁 观看记录（{d.view_logs?.length || 0} 条）
+                    </div>
+                    {(!d.view_logs || d.view_logs.length === 0) ? (
+                      <div style={{ fontSize: 12, color: T.faint }}>暂无观看记录</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 120, overflowY: "auto" }}>
+                        {d.view_logs.slice(0, 10).map((v, i) => (
+                          <div key={i} style={{ fontSize: 12, color: T.muted, padding: "4px 8px", background: T.surface3, borderRadius: 6, display: "flex", justifyContent: "space-between" }}>
+                            <span>{v.title}</span>
+                            <span style={{ color: T.faint }}>{v.viewed_date}</span>
+                          </div>
+                        ))}
+                        {d.view_logs.length > 10 && <div style={{ fontSize: 11, color: T.faint }}>...共 {d.view_logs.length} 条</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!memberModal} onClose={() => setMemberModal(null)} title="✨ 调整会员时长" width={400}>
         {memberModal && (
@@ -1422,11 +1569,111 @@ function UsersPanel({ initialUsers, onToast }) {
 }
 
 // ══════════════════════════════════════════════════════
+// 模块五：订单管理
+// ══════════════════════════════════════════════════════
+function OrdersPanel({ initialOrders, onToast }) {
+  const [orders, setOrders] = useState(initialOrders);
+  const [search, setSearch] = useState("");
+
+  const PLAN_LABELS = {
+    month: "月卡", quarter: "季卡", year: "年卡", lifetime: "永久卡", trial: "试用卡",
+  };
+
+  const filtered = orders.filter((o) => {
+    if (!search.trim()) return true;
+    const q = search.trim().toLowerCase();
+    return (
+      o.out_trade_no?.includes(q) ||
+      o.redeem_code?.toLowerCase().includes(q)
+    );
+  });
+
+  function copyText(text) {
+    navigator.clipboard?.writeText(text).catch(() => {});
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: T.ink, margin: 0, flex: 1 }}>📦 订单管理</h2>
+        <div style={{ display: "flex", gap: 8, fontSize: 12, color: T.muted }}>
+          <span>总计 <b style={{ color: T.ink }}>{orders.length}</b></span>
+          <span>已支付 <b style={{ color: T.good }}>{orders.filter(o => o.status === "paid").length}</b></span>
+          <span>待支付 <b style={{ color: T.warn }}>{orders.filter(o => o.status === "pending").length}</b></span>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索订单号或兑换码…"
+          style={{
+            padding: "7px 14px", borderRadius: T.radius.pill, fontSize: 13,
+            background: T.surface2, border: `1px solid ${T.border2}`, color: T.ink, outline: "none", width: 240,
+          }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: "center", padding: 40, color: T.faint }}>暂无订单</div>
+        )}
+        {filtered.map((o) => {
+          const isPaid = o.status === "paid";
+          return (
+            <div key={o.id} style={{
+              background: T.surface2, borderRadius: T.radius.md,
+              border: `1px solid ${isPaid ? "rgba(16,185,129,0.20)" : T.border}`,
+              padding: "12px 16px",
+              display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: T.radius.pill,
+                    background: isPaid ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                    color: isPaid ? T.good : T.warn,
+                    border: `1px solid ${isPaid ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.25)"}`,
+                  }}>{isPaid ? "已支付" : "待支付"}</span>
+                  <span style={{ fontSize: 12, color: T.muted }}>{PLAN_LABELS[o.plan] || o.plan}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: T.ink }}>¥{o.amount}</span>
+                  <span style={{ fontSize: 11, color: T.faint }}>
+                    {new Date(o.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 12, color: T.faint }}>
+                    订单号：<code style={{ fontFamily: "monospace", color: T.muted, fontSize: 12 }}>{o.out_trade_no}</code>
+                    <button onClick={() => { copyText(o.out_trade_no); onToast("已复制 ✓"); }} style={{ marginLeft: 6, fontSize: 11, padding: "1px 6px", borderRadius: 4, border: `1px solid ${T.border2}`, background: T.surface3, color: T.faint, cursor: "pointer" }}>复制</button>
+                  </div>
+                  <div style={{ fontSize: 12, color: T.faint }}>
+                    兑换码：
+                    <code style={{ fontFamily: "monospace", color: isPaid ? T.good : T.faint, fontWeight: isPaid ? 800 : 400, fontSize: 13, letterSpacing: 1 }}>
+                      {isPaid ? o.redeem_code : "（未支付）"}
+                    </code>
+                    {isPaid && (
+                      <button onClick={() => { copyText(o.redeem_code); onToast("已复制 ✓"); }} style={{ marginLeft: 6, fontSize: 11, padding: "1px 6px", borderRadius: 4, border: `1px solid ${T.border2}`, background: T.surface3, color: T.faint, cursor: "pointer" }}>复制</button>
+                    )}
+                    {isPaid && (
+                      <span style={{ marginLeft: 10, fontSize: 11, color: o.redeemed_by ? T.good : T.warn, fontWeight: 700 }}>
+                        {o.redeemed_by ? `已兑换 · ${o.redeemed_by}` : "未兑换"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════
 // 主入口
 // ══════════════════════════════════════════════════════
 export default function AdminClient({
   adminEmail, initialClips, initialTaxonomies,
-  initialRedeemCodes, initialUsers, stats, token,
+  initialRedeemCodes, initialUsers, initialOrders, stats, token,
 }) {
   useEffect(() => { if (token) setAdminToken(token); }, [token]);
 
@@ -1457,6 +1704,7 @@ export default function AdminClient({
     { id: "overview", label: "📊 概览" },
     { id: "clips", label: "🎬 视频" },
     { id: "codes", label: "🎫 兑换码" },
+    { id: "orders", label: "📦 订单" },
     { id: "users", label: "👤 用户" },
   ];
 
@@ -1467,6 +1715,34 @@ export default function AdminClient({
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         input:focus, textarea:focus, select:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 2px ${T.accent}33; }
+
+        @media (max-width: 640px) {
+          .admin-nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1; }
+          .admin-nav-tabs::-webkit-scrollbar { display: none; }
+          .admin-nav-tabs button { flex-shrink: 0; }
+          .admin-nav-email { display: none !important; }
+          .admin-body { padding: 16px 12px 40px !important; }
+
+          .code-row { flex-wrap: wrap !important; }
+          .code-row code { width: 100%; margin-bottom: 2px; }
+          .code-date { display: none !important; }
+          .code-row-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; }
+          .codes-search { width: 100% !important; }
+
+          .user-row { flex-wrap: wrap !important; }
+          .user-row-actions { width: 100%; display: flex; gap: 6px; margin-top: 6px; }
+          .user-row-actions button { flex: 1; justify-content: center; }
+          .users-search { width: 100% !important; }
+
+          .admin-modal-inner {
+            max-width: 100% !important;
+            border-radius: 16px 16px 0 0 !important;
+            position: fixed !important;
+            bottom: 0 !important; left: 0 !important; right: 0 !important;
+            max-height: 88vh !important;
+            margin: 0 !important;
+          }
+        }
       `}</style>
 
       <div style={{
@@ -1480,7 +1756,7 @@ export default function AdminClient({
           🛠 后台管理
         </div>
         <div style={{ height: 20, width: 1, background: T.border }} />
-        <div style={{ display: "flex", gap: 4, flex: 1 }}>
+        <div className="admin-nav-tabs" style={{ display: "flex", gap: 4, flex: 1 }}>
           {tabs.map((t) => (
             <button key={t.id} onClick={() => { setTab(t.id); window.location.hash = t.id; }} style={{
               padding: "6px 16px", borderRadius: T.radius.pill, fontSize: 13, fontWeight: 700,
@@ -1491,11 +1767,11 @@ export default function AdminClient({
             }}>{t.label}</button>
           ))}
         </div>
-        <div style={{ fontSize: 12, color: T.faint, flexShrink: 0 }}>{adminEmail}</div>
+        <div className="admin-nav-email" style={{ fontSize: 12, color: T.faint, flexShrink: 0 }}>{adminEmail}</div>
         <a href="/" style={{ fontSize: 12, color: T.faint, textDecoration: "none", flexShrink: 0 }}>← 返回网站</a>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 60px" }}>
+      <div className="admin-body" style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 24px 60px" }}>
         {tab === "overview" && <OverviewPanel stats={stats} />}
         {tab === "clips" && (
           <ClipsPanel
@@ -1507,6 +1783,12 @@ export default function AdminClient({
         {tab === "codes" && (
           <CodesPanel
             initialCodes={initialRedeemCodes}
+            onToast={onToast}
+          />
+        )}
+        {tab === "orders" && (
+          <OrdersPanel
+            initialOrders={initialOrders || []}
             onToast={onToast}
           />
         )}

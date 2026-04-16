@@ -1,6 +1,7 @@
 // app/page.js
 import { createClient } from "@supabase/supabase-js";
 import { Suspense } from "react";
+import { proxyCoverUrl } from "../lib/imageUrl.js";
 
 import HomeClient from "./components/HomeClient";
 import UserMenuClient from "./components/UserMenuClient";
@@ -30,7 +31,7 @@ function normRow(r) {
     created_at: r.created_at,
     upload_time: r.upload_time ?? null,
     access_tier: r.access_tier,
-    cover_url: r.cover_url ?? null,
+    cover_url: proxyCoverUrl(r.cover_url),
     video_url: r.video_url ?? null,
     difficulty: typeof r.difficulty_slug === "string" ? r.difficulty_slug : null,
     // topic_slugs 存 genre + duration 标签
@@ -173,19 +174,21 @@ export default async function Page() {
                   fontWeight: 950,
                   color: THEME.colors.ink,
                   letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
                 }}
               >
-                影视英语场景库
+                <span className="title-desktop">影视英语场景库</span>
+                <span className="title-mobile">影视英语<br />场景库</span>
+                <style>{`
+                  .title-desktop { display: inline; }
+                  .title-mobile { display: none; }
+                  @media (max-width: 640px) {
+                    .title-desktop { display: none; }
+                    .title-mobile { display: inline; }
+                  }
+                `}</style>
               </div>
-              <div
-                style={{
-                  marginTop: 4,
-                  fontSize: 12,
-                  color: THEME.colors.faint,
-                }}
-              >
-                Real dramas · bilingual subtitles · vocabulary cards
-              </div>
+
             </div>
           </div>
 

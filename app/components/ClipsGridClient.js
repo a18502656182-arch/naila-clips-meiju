@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { THEME } from "./home/theme";
 import { createSupabaseBrowserClient } from "../../utils/supabase/client";
@@ -297,16 +296,14 @@ function HoverMedia({ coverUrl, videoUrl, title }) {
     >
       {/* 封面图：始终渲染，视频出现时淡出 */}
       {coverUrl ? (
-        <Image
+        <img
           src={coverUrl}
           alt={title || ""}
-          fill
           style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
             objectFit: "cover",
-            transition: "opacity 200ms ease",
-            opacity: showVideo ? 0 : 1,
           }}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
       ) : (
         <div style={{ width: "100%", height: "100%", background: "rgba(11,18,32,0.06)" }} />
@@ -501,10 +498,16 @@ function BookmarkBtn({ clipId, saved, loggedIn, onNeedLogin, onToggle }) {
 }
 
 const PAGE_SIZE = 12;
+const VISIBLE_KEY = "meiju_visible_count_v1";
 
 export default function ClipsGridClient({ allItems, filters }) {
   // 当前显示条数（无限滚动通过增加这个数字实现）
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("meiju_visible_count_v1");
+      return saved ? Math.max(PAGE_SIZE, parseInt(saved, 10)) : PAGE_SIZE;
+    } catch { return PAGE_SIZE; }
+  });
 
   const [loading, setLoading] = useState(false);
   const [err] = useState("");
@@ -616,8 +619,14 @@ export default function ClipsGridClient({ allItems, filters }) {
     if (cur !== prevFiltersRef.current) {
       prevFiltersRef.current = cur;
       setVisibleCount(PAGE_SIZE);
+      try { sessionStorage.removeItem(VISIBLE_KEY); } catch {}
     }
   }, [filters]);
+
+  // visibleCount变化时保存
+  useEffect(() => {
+    try { sessionStorage.setItem(VISIBLE_KEY, String(visibleCount)); } catch {}
+  }, [visibleCount]);
 
   // 当前实际显示的条目
   const items = filteredAll.slice(0, visibleCount);

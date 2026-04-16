@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const remote = (p) => (API_BASE ? `${API_BASE}${p}` : p);
 
-const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/5c491370-2fe2-430e-f155-5b96d3fbdf00/qr";
+const WECHAT_QR_URL = "/cf-img/qvilyoTfnpu3-vu3LTcGwQ/13252c4c-662b-4537-9ad0-c571d226af00/qr";
 const WECHAT_ID = "wll74748585";
 
 function getToken() {
@@ -107,7 +107,7 @@ export default function RedeemPage() {
       });
       const j = await r.json();
       if (!r.ok || !j.ok) {
-        const errMap = { invalid_code: "兑换码无效 / 已过期 / 已用完", code_expired: "该兑换码已过期", code_used_up: "该兑换码已达使用上限", not_logged_in: "请先登录后再兑换" };
+        const errMap = { invalid_code: "兑换码无效 / 已过期 / 已用完", code_expired: "该兑换码已过期", code_used_up: "该兑换码已达使用上限", not_logged_in: "请先登录后再兑换", trial_already_used: "每个账号只能使用一次试用卡" };
         setMsg(errMap[j.error] || j.error || "兑换失败"); return;
       }
       setSuccess({ plan: j.plan, expires_at: j.expires_at });
