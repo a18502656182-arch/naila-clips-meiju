@@ -25,6 +25,7 @@ export default function RootLayout({ children }) {
           body.dark-mode {
             filter: invert(1) hue-rotate(180deg);
             background: #fff;
+            font-family: 'Noto Sans SC', sans-serif;
           }
           body.dark-mode img,
           body.dark-mode video,
@@ -33,6 +34,9 @@ export default function RootLayout({ children }) {
             filter: invert(1) hue-rotate(180deg);
           }
         `}</style>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body style={{ margin: 0 }} suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('dark_mode')==='1')document.body.classList.add('dark-mode')}catch(e){}` }} />
