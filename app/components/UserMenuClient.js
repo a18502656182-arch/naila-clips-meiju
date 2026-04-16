@@ -185,6 +185,24 @@ export default function UserMenuClient() {
     );
   }
 
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem("dark_mode") === "1"; } catch { return false; }
+  });
+
+  function toggleDark() {
+    const next = !darkMode;
+    setDarkMode(next);
+    try {
+      if (next) {
+        document.body.classList.add("dark-mode");
+        localStorage.setItem("dark_mode", "1");
+      } else {
+        document.body.classList.remove("dark-mode");
+        localStorage.removeItem("dark_mode");
+      }
+    } catch {}
+  }
+
   const displayName = meData?.username || (email || "U").split("@")[0];
   const initial = displayName.slice(0, 1).toUpperCase();
   const expiryStr = formatExpiry(meData?.ends_at || meData?.expires_at || meData?.end_at);
@@ -380,6 +398,28 @@ export default function UserMenuClient() {
             >
               {isMember ? "✨ 兑换码续期" : "✨ 兑换码开通会员"}
             </a>
+
+            <button
+              type="button"
+              onClick={toggleDark}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: THEME.radii.md,
+                border: `1px solid ${THEME.colors.border}`,
+                background: THEME.colors.surface,
+                color: THEME.colors.ink,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              {darkMode ? "☀️ 切换浅色模式" : "🌙 切换深色模式"}
+            </button>
 
             <button
               type="button"
