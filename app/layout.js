@@ -21,9 +21,40 @@ export default function RootLayout({ children }) {
           *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
           :focus-visible { outline: 2px solid rgba(99,102,241,0.5); outline-offset: 2px; }
           :focus:not(:focus-visible) { outline: none; }
+
+          /* 深色模式 */
+          body.dark-mode {
+            filter: invert(1) hue-rotate(180deg);
+            background: #fff;
+          }
+          body.dark-mode img,
+          body.dark-mode video,
+          body.dark-mode iframe,
+          body.dark-mode [class*="cover"],
+          body.dark-mode canvas {
+            filter: invert(1) hue-rotate(180deg);
+          }
         `}</style>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              if (localStorage.getItem('dark_mode') === '1') {
+                document.documentElement.classList.add('dark-mode-pending');
+              }
+            } catch(e) {}
+          })();
+        `}} />
       </head>
       <body style={{ margin: 0 }}>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              if (localStorage.getItem('dark_mode') === '1') {
+                document.body.classList.add('dark-mode');
+              }
+            } catch(e) {}
+          })();
+        `}} />
         {children}
         <PenguinWrapper />
         <BuyFloatBtn />
