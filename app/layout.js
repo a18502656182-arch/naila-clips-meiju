@@ -25,7 +25,9 @@ export default function RootLayout({ children }) {
           body.dark-mode {
             filter: invert(1) hue-rotate(180deg);
             background: #fff;
-            font-family: 'Noto Sans SC', sans-serif;
+          }
+          body.dark-mode, body.dark-mode * {
+            font-family: 'Noto Sans SC', sans-serif !important;
           }
           body.dark-mode img,
           body.dark-mode video,
