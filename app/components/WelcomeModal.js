@@ -24,6 +24,7 @@ export default function WelcomeModal() {
   return (
     <div
       onClick={close}
+      className="modal-overlay"
       style={{
         position: "fixed", inset: 0, zIndex: 10001,
         background: "rgba(11,18,32,0.5)",
