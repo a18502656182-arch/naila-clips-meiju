@@ -34,6 +34,13 @@ export default function RootLayout({ children }) {
           body.dark-mode canvas {
             filter: invert(1) hue-rotate(180deg);
           }
+          body.dark-mode .modal-overlay {
+            filter: invert(1) hue-rotate(180deg);
+          }
+
+          body.dark-mode mark {
+            filter: invert(1) hue-rotate(180deg);
+          }
         `}</style>
       </head>
       <body style={{ margin: 0, fontFamily: "'Noto Serif SC', serif" }}>
