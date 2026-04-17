@@ -289,8 +289,8 @@ function SubtitleRow({ seg, idx, active, onClick, subMode, rowRef, loopIdx, onTo
 
   return (
     <div ref={rowRef} onClick={onClick} role="button" tabIndex={0} style={{
-      border: `1px solid ${active ? "#bfe3ff" : THEME.colors.border}`,
-      background: active ? "#f3fbff" : THEME.colors.surface,
+      border: `1px solid ${active ? "#3b82f6" : THEME.colors.border}`,
+      background: active ? "#dbeafe" : THEME.colors.surface,
       borderRadius: THEME.radii.md, padding: 12, cursor: "pointer",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
