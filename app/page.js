@@ -8,7 +8,6 @@ import HeroSection from "./components/home/HeroSection";
 import HowItWorks from "./components/home/HowItWorks";
 import SectionTitle from "./components/home/SectionTitle";
 import { THEME } from "./components/home/theme";
-import { proxyCoverUrl } from "../lib/imageUrl.js";
 
 export const revalidate = 60;
 
@@ -31,50 +30,69 @@ function normRow(r) {
     created_at: r.created_at,
     upload_time: r.upload_time ?? null,
     access_tier: r.access_tier,
-    cover_url: proxyCoverUrl(r.cover_url),
+    cover_url: r.cover_url ?? null,
     video_url: r.video_url ?? null,
     difficulty: typeof r.difficulty_slug === "string" ? r.difficulty_slug : null,
+    // topic_slugs 存 genre + duration 标签
     topics: Array.isArray(r.topic_slugs) ? r.topic_slugs : [],
+    // channel_slugs 存剧名 show 标签
     channels: Array.isArray(r.channel_slugs) ? r.channel_slugs : [],
   };
 }
 
 async function fetchAllClips() {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("clips_view")
-      .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
-      .order("upload_time", { ascending: false })
-    if (error) throw error;
-    return (data || []).map(normRow);
-  }
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("clips_view")
+    .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
+    .order("upload_time", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(normRow);
+}
 
 async function fetchTaxonomies() {
-    const supabase = getSupabaseAdmin();
-    const { data: taxRows, error } = await supabase
-      .from("taxonomies")
-      .select("type, slug")
-      .order("type", { ascending: true })
-      .order("slug", { ascending: true });
-    if (error) return { difficulties: [], topics: [], channels: [] };
-    const rows = taxRows || [];
-    return {
-      difficulties: rows.filter((t) => t.type === "difficulty").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-      topics: rows.filter((t) => t.type === "topic").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-      channels: rows.filter((t) => t.type === "channel").map((t) => ({ slug: t.slug, name: t.slug, count: 0 })),
-    };
-  }
+  const supabase = getSupabaseAdmin();
+  const [{ data: taxRows, error }, { data: clipRows }] = await Promise.all([
+    supabase.from("taxonomies").select("type, slug").order("type").order("slug"),
+    supabase.from("clips_view").select("topic_slugs, channel_slugs"),
+  ]);
+  if (error) return { difficulties: [], genres: [], durations: [], shows: [] };
+  const rows = taxRows || [];
+
+  // 来源 slug 集合（type=duration，改名来源后依然是这个 type）
+  const sourceSlugs = new Set(rows.filter((t) => t.type === "duration").map((t) => t.slug));
+
+  // 每个视频只打一个来源标签，直接取第一次遇到的即可
+  const showSourceMap = {};
+  (clipRows || []).forEach((clip) => {
+    const shows = Array.isArray(clip.channel_slugs) ? clip.channel_slugs : [];
+    const source = (Array.isArray(clip.topic_slugs) ? clip.topic_slugs : []).find((s) => sourceSlugs.has(s)) || null;
+    if (!source) return;
+    shows.forEach((show) => {
+      if (!showSourceMap[show]) showSourceMap[show] = source;
+    });
+  });
+
+  return {
+    difficulties: rows.filter((t) => t.type === "difficulty").map((t) => ({ slug: t.slug })),
+    genres: rows.filter((t) => t.type === "genre" || t.type === "topic").map((t) => ({ slug: t.slug })),
+    durations: rows.filter((t) => t.type === "duration").map((t) => ({ slug: t.slug })),
+    shows: rows
+      .filter((t) => t.type === "show" || t.type === "channel")
+      .map((t) => ({ slug: t.slug, source: showSourceMap[t.slug] || null })),
+  };
+}
 
 async function fetchFeatured() {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase
-      .from("clips_view")
-      .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
-      .eq("access_tier", "free")
-      .order("upload_time", { ascending: false })
-    if (Array.isArray(data) && data[0]) return normRow(data[0]);
-    return null;
-  }
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("clips_view")
+    .select("id,title,description,duration_sec,created_at,upload_time,access_tier,cover_url,video_url,difficulty_slug,topic_slugs,channel_slugs")
+    .eq("access_tier", "free")
+    .order("upload_time", { ascending: false });
+  if (Array.isArray(data) && data[0]) return normRow(data[0]);
+  return null;
+}
 
 export default async function Page() {
   let allItems = [];
@@ -94,7 +112,7 @@ export default async function Page() {
   } catch {}
   if (!featured) featured = allItems[0] || null;
 
-  let taxonomies = { difficulties: [], topics: [], channels: [] };
+  let taxonomies = { difficulties: [], genres: [], durations: [], shows: [] };
   try {
     taxonomies = await fetchTaxonomies();
   } catch {}
@@ -155,10 +173,11 @@ export default async function Page() {
                   fontWeight: 950,
                   color: THEME.colors.ink,
                   letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
                 }}
               >
-                <span className="title-desktop">油管英语场景库</span>
-                <span className="title-mobile">油管英语<br />场景库</span>
+                <span className="title-desktop">影视英语场景库</span>
+                <span className="title-mobile">影视英语<br />场景库</span>
                 <style>{`
                   .title-desktop { display: inline; }
                   .title-mobile { display: none; }
