@@ -43,7 +43,7 @@ function proxyCoverUrl(url) {
   if (url.startsWith("https://imagedelivery.net")) {
     // 去掉末尾变体名，换成压缩参数
     const base = url.slice("https://imagedelivery.net".length).replace(/\/[^/]+$/, "");
-    return "/cf-img" + base + "/w=400,quality=70,format=webp";
+    return "/cf-img" + base + "/w=800,quality=85,format=webp";
   }
   return url;
 }
