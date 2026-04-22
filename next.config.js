@@ -36,12 +36,20 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // ✅ 只给首页 document 加 CDN 缓存策略
         source: "/",
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=0, s-maxage=30, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/cf-img/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
           },
         ],
       },
