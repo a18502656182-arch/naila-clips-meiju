@@ -9,7 +9,7 @@ import HowItWorks from "./components/home/HowItWorks";
 import SectionTitle from "./components/home/SectionTitle";
 import { THEME } from "./components/home/theme";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL;
@@ -21,6 +21,16 @@ function getSupabaseAdmin() {
   });
 }
 
+
+function proxyCoverUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("https://imagedelivery.net")) {
+    const base = url.slice("https://imagedelivery.net".length).replace(/\/[^\/]+$/, "");
+    return "/cf-img" + base + "/w=400,quality=70,format=webp";
+  }
+  return url;
+}
+
 function normRow(r) {
   return {
     id: r.id,
@@ -30,7 +40,7 @@ function normRow(r) {
     created_at: r.created_at,
     upload_time: r.upload_time ?? null,
     access_tier: r.access_tier,
-    cover_url: r.cover_url ?? null,
+    cover_url: proxyCoverUrl(r.cover_url) ?? null,
     video_url: r.video_url ?? null,
     difficulty: typeof r.difficulty_slug === "string" ? r.difficulty_slug : null,
     // topic_slugs 存 genre + duration 标签
