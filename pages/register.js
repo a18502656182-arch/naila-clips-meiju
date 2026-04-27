@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { createSupabaseBrowserClient } from "../utils/supabase/client";
+import BuyFloatBtnPages from "./components/BuyFloatBtnPages";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const remote = (p) => (API_BASE ? `${API_BASE}${p}` : p);
@@ -132,12 +133,10 @@ export default function RegisterPage() {
         username: identifier.trim(),
       });
 
-      // 如果后端返回了 token，直接写入 localStorage 实现自动登录
       if (j.access_token) {
         try {
           localStorage.setItem("sb_access_token", j.access_token);
           if (j.refresh_token) localStorage.setItem("sb_refresh_token", j.refresh_token);
-          // 注入 Supabase SDK session，确保跳转后 getSession() 能读到登录状态
           const supabase = createSupabaseBrowserClient();
           await supabase.auth.setSession({
             access_token: j.access_token,
@@ -146,7 +145,6 @@ export default function RegisterPage() {
         } catch (e) {}
       }
 
-      // 跳转前更新缓存，避免主页闪烁
       try { sessionStorage.setItem("buy_btn_is_member", "1"); } catch {}
       setTimeout(() => {
         if (j.access_token) {
@@ -162,231 +160,213 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={shellStyle()}>
-      <a
-        href="/"
-        style={{
-          textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
-        <div style={logoStyle()}>JC</div>
-        <div style={{ lineHeight: 1.2 }}>
-          <div style={{ fontSize: 17, fontWeight: 950, color: THEME.colors.ink }}>
-            影视英语场景库
-          </div>
-          <div style={{ fontSize: 12, color: THEME.colors.faint }}>
-            Real dramas · bilingual subtitles · vocabulary cards
-          </div>
-        </div>
-      </a>
-
-      <div style={cardStyle()}>
-        {success ? (
-          <div style={{ textAlign: "center", padding: "10px 0" }}>
-            <div style={{ fontSize: 40, marginBottom: 10 }}>🎉</div>
-            <div
-              style={{
-                fontSize: 22,
-                lineHeight: 1.2,
-                fontWeight: 980,
-                color: THEME.colors.ink,
-                marginBottom: 8,
-              }}
-            >
-              注册成功
+    <>
+      <div style={shellStyle()}>
+        <a
+          href="/"
+          style={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 28,
+          }}
+        >
+          <div style={logoStyle()}>JC</div>
+          <div style={{ lineHeight: 1.2 }}>
+            <div style={{ fontSize: 17, fontWeight: 950, color: THEME.colors.ink }}>
+              影视英语场景库
             </div>
-            <div
-              style={{
-                fontSize: 14,
-                color: THEME.colors.muted,
-                lineHeight: 1.7,
-              }}
-            >
-              账号：{success.username || success.email}
-              {success.expires_at ? (
-                <>
-                  <br />
-                  到期时间：{new Date(success.expires_at).toLocaleDateString("zh-CN")}
-                </>
-              ) : (
-                <>
-                  <br />
-                  到期时间：永久
-                </>
-              )}
-            </div>
-            <div style={{ marginTop: 14, fontSize: 13, color: THEME.colors.faint }}>
-              正在跳转首页...
+            <div style={{ fontSize: 12, color: THEME.colors.faint }}>
+              Real dramas · bilingual subtitles · vocabulary cards
             </div>
           </div>
-        ) : (
-          <>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 12px",
-                borderRadius: 999,
-                background: "rgba(124,58,237,0.08)",
-                border: "1px solid rgba(124,58,237,0.12)",
-                color: THEME.colors.vip,
-                fontSize: 12,
-                fontWeight: 900,
-                marginBottom: 16,
-              }}
-            >
-              会员注册
-            </div>
+        </a>
 
-            <div
-              style={{
-                fontSize: 28,
-                lineHeight: 1.1,
-                letterSpacing: "-0.04em",
-                fontWeight: 980,
-                color: THEME.colors.ink,
-                marginBottom: 8,
-              }}
-            >
-              注册并开通会员
-            </div>
-
-            <div
-              style={{
-                fontSize: 14,
-                color: THEME.colors.muted,
-                lineHeight: 1.7,
-                marginBottom: 22,
-              }}
-            >
-              填写账号信息并输入兑换码，一步完成注册和开通。
-            </div>
-
-            <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: THEME.colors.ink,
-                    marginBottom: 6,
-                  }}
-                >
-                  邮箱或用户名
-                </div>
-                <input
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="邮箱 或 你想要的用户名"
-                  style={inputStyle(false)}
-                />
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: THEME.colors.ink,
-                    marginBottom: 6,
-                  }}
-                >
-                  密码
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="至少 8 位，建议包含大小写和数字"
-                  style={inputStyle(false)}
-                />
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: THEME.colors.ink,
-                    marginBottom: 6,
-                  }}
-                >
-                  兑换码
-                </div>
-                <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="输入你的兑换码"
-                  style={inputStyle(true)}
-                />
-              </div>
-
-              {msg && (
-                <div
-                  style={{
-                    padding: "11px 14px",
-                    background: "#fff1f1",
-                    border: "1px solid #ffd4d4",
-                    borderRadius: THEME.radii.md,
-                    fontSize: 13,
-                    color: "#b00000",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {msg}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
+        <div style={cardStyle()}>
+          {success ? (
+            <div style={{ textAlign: "center", padding: "10px 0" }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>🎉</div>
+              <div
                 style={{
-                  marginTop: 4,
-                  minHeight: 48,
-                  borderRadius: THEME.radii.pill,
-                  border: "none",
-                  background: loading
-                    ? "rgba(124,58,237,0.42)"
-                    : `linear-gradient(135deg, ${THEME.colors.accent2}, ${THEME.colors.vip})`,
-                  color: "#fff",
+                  fontSize: 22,
+                  lineHeight: 1.2,
+                  fontWeight: 980,
+                  color: THEME.colors.ink,
+                  marginBottom: 8,
+                }}
+              >
+                注册成功
+              </div>
+              <div
+                style={{
                   fontSize: 14,
-                  fontWeight: 800,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: "0 16px 30px rgba(124,58,237,0.24)",
+                  color: THEME.colors.muted,
+                  lineHeight: 1.7,
                 }}
               >
-                {loading ? "注册中..." : "注册并开通会员 ✨"}
-              </button>
-            </form>
-
-            <div
-              style={{
-                marginTop: 18,
-                textAlign: "center",
-                fontSize: 13,
-                color: THEME.colors.muted,
-              }}
-            >
-              已有账号？{" "}
-              <a
-                href="/login"
-                style={{
-                  color: THEME.colors.accent,
-                  fontWeight: 800,
-                  textDecoration: "none",
-                }}
-              >
-                去登录
-              </a>
+                账号：{success.username || success.email}
+                {success.expires_at ? (
+                  <>
+                    <br />
+                    到期时间：{new Date(success.expires_at).toLocaleDateString("zh-CN")}
+                  </>
+                ) : (
+                  <>
+                    <br />
+                    到期时间：永久
+                  </>
+                )}
+              </div>
+              <div style={{ marginTop: 14, fontSize: 13, color: THEME.colors.faint }}>
+                正在跳转首页...
+              </div>
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  background: "rgba(124,58,237,0.08)",
+                  border: "1px solid rgba(124,58,237,0.12)",
+                  color: THEME.colors.vip,
+                  fontSize: 12,
+                  fontWeight: 900,
+                  marginBottom: 16,
+                }}
+              >
+                会员注册
+              </div>
+
+              <div
+                style={{
+                  fontSize: 28,
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.04em",
+                  fontWeight: 980,
+                  color: THEME.colors.ink,
+                  marginBottom: 8,
+                }}
+              >
+                注册并开通会员
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  color: THEME.colors.muted,
+                  lineHeight: 1.7,
+                  marginBottom: 22,
+                }}
+              >
+                填写账号信息并输入兑换码，一步完成注册和开通。
+              </div>
+
+              <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: THEME.colors.ink, marginBottom: 6 }}>
+                    邮箱或用户名
+                  </div>
+                  <input
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="邮箱 或 你想要的用户名"
+                    style={inputStyle(false)}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: THEME.colors.ink, marginBottom: 6 }}>
+                    密码
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="至少 8 位，建议包含大小写和数字"
+                    style={inputStyle(false)}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: THEME.colors.ink, marginBottom: 6 }}>
+                    兑换码
+                  </div>
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="输入你的兑换码"
+                    style={inputStyle(true)}
+                  />
+                </div>
+
+                {msg && (
+                  <div
+                    style={{
+                      padding: "11px 14px",
+                      background: "#fff1f1",
+                      border: "1px solid #ffd4d4",
+                      borderRadius: THEME.radii.md,
+                      fontSize: 13,
+                      color: "#b00000",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {msg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    marginTop: 4,
+                    minHeight: 48,
+                    borderRadius: THEME.radii.pill,
+                    border: "none",
+                    background: loading
+                      ? "rgba(124,58,237,0.42)"
+                      : `linear-gradient(135deg, ${THEME.colors.accent2}, ${THEME.colors.vip})`,
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    cursor: loading ? "not-allowed" : "pointer",
+                    boxShadow: "0 16px 30px rgba(124,58,237,0.24)",
+                  }}
+                >
+                  {loading ? "注册中..." : "注册并开通会员 ✨"}
+                </button>
+              </form>
+
+              <div
+                style={{
+                  marginTop: 18,
+                  textAlign: "center",
+                  fontSize: 13,
+                  color: THEME.colors.muted,
+                }}
+              >
+                已有账号？{" "}
+                <a
+                  href="/login"
+                  style={{
+                    color: THEME.colors.accent,
+                    fontWeight: 800,
+                    textDecoration: "none",
+                  }}
+                >
+                  去登录
+                </a>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      <BuyFloatBtnPages />
+    </>
   );
 }
