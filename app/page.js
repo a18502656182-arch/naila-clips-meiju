@@ -205,6 +205,32 @@ export default async function Page() {
         </div>
       </div>
 
+      {/* 滚动通知条 */}
+      <div style={{
+        background: "linear-gradient(90deg, #dc2626, #b91c1c)",
+        color: "#fff",
+        padding: "10px 0",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+      }}>
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+          }
+          .notice-marquee {
+            display: inline-block;
+            animation: marquee 22s linear infinite;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+          }
+        `}</style>
+        <span className="notice-marquee">
+          🔔 重要通知：本站影视美剧内容已升级合并至全新学习网站，新站同时收录油管英语母语博主vlog片段与英美剧、电影精选片段，内容更全面丰富。老会员请联系站内客服，免费获取新站链接及账号开通权限！&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🔔 重要通知：本站影视美剧内容已升级合并至全新学习网站，新站同时收录油管英语母语博主vlog片段与英美剧、电影精选片段，内容更全面丰富。老会员请联系站内客服，免费获取新站链接及账号开通权限！
+        </span>
+      </div>
+
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 16px 52px" }}>
         <HeroSection featured={featured} />
 
